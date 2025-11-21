@@ -1,0 +1,100 @@
+# Pre-commit hooks configuration
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Go-specific hooks
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.61.0
+    hooks:
+      - id: golangci-lint
+        args: [--timeout=5m]
+
+  - repo: https://github.com/tekwizely/pre-commit-golang
+    rev: v1.0.0-rc.1
+    hooks:
+      # Format with gofmt
+      - id: go-fmt
+        args: [-w]
+      
+      # Run go mod tidy
+      - id: go-mod-tidy
+      
+      # Run go vet
+      - id: go-vet
+      
+      # Run tests (optional, can be slow)
+      # - id: go-test
+      #   args: [-race, -timeout=5m]
+      
+      # Check for common mistakes
+      - id: go-critic
+      
+      # Security checks
+      - id: go-sec
+        args: [-quiet]
+
+  # General file hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Prevent committing to main/master
+      - id: no-commit-to-branch
+        args: [--branch=main, --branch=master]
+      
+      # File checks
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-yaml
+        exclude: ^deploy/helm/
+      - id: check-json
+      - id: check-toml
+      
+      # Whitespace/formatting
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      
+      # Security
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+
+  # SQL migration checks
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.2.5
+    hooks:
+      - id: sqlfluff-lint
+        files: migrations/.*\.sql$
+        args: [--dialect=postgres]
+      - id: sqlfluff-fix
+        files: migrations/.*\.sql$
+        args: [--dialect=postgres]
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.1-beta
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3018]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.42.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+        exclude: ^(PROJECT_SUMMARY\.md|AWS_SDK_MIGRATION\.md)$
+
+# Global exclusions
+exclude: |
+  (?x)^(
+    bin/.*|
+    vendor/.*|
+    \.env.*|
+    go\.sum
+  )$

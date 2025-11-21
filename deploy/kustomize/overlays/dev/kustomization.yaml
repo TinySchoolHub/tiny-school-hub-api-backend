@@ -1,0 +1,39 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: tinyschoolhub-dev
+
+commonLabels:
+  environment: development
+
+replicas:
+  - name: tiny-school-hub
+    count: 1
+
+images:
+  - name: tinyschoolhub/api
+    newTag: dev
+
+configMapGenerator:
+  - name: tiny-school-hub-config
+    behavior: merge
+    literals:
+      - ENV=development
+      - LOG_LEVEL=debug
+      - LOG_FORMAT=console
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "200m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "256Mi"
+    target:
+      kind: Deployment
+      name: tiny-school-hub

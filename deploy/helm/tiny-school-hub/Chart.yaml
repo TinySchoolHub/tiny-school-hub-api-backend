@@ -1,0 +1,13 @@
+apiVersion: v2
+name: tiny-school-hub
+description: A Helm chart for Tiny School Hub API
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - tiny-school-hub
+  - education
+  - api
+maintainers:
+  - name: TinySchoolHub
+    email: contact@tinyschoolhub.com

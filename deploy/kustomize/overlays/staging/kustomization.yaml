@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: tinyschoolhub-staging
+
+commonLabels:
+  environment: staging
+
+replicas:
+  - name: tiny-school-hub
+    count: 2
+
+images:
+  - name: tinyschoolhub/api
+    newTag: staging
+
+configMapGenerator:
+  - name: tiny-school-hub-config
+    behavior: merge
+    literals:
+      - ENV=staging
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json

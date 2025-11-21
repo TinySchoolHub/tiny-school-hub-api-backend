@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tiny-school-hub.fullname" . }}
+  labels:
+    {{- include "tiny-school-hub.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "tiny-school-hub.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "tiny-school-hub.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "tiny-school-hub.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.config.port }}
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: {{ include "tiny-school-hub.fullname" . }}
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "tiny-school-hub.fullname" . }}-secrets
+              key: database-url
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.jwt.secretKeyRef }}
+              name: {{ .Values.jwt.secretKeyRef.name }}
+              key: {{ .Values.jwt.secretKeyRef.key }}
+              {{- else }}
+              name: {{ include "tiny-school-hub.fullname" . }}-secrets
+              key: jwt-secret
+              {{- end }}
+        - name: STORAGE_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.storage.accessKeyRef }}
+              name: {{ .Values.storage.accessKeyRef.name }}
+              key: {{ .Values.storage.accessKeyRef.key }}
+              {{- else }}
+              name: {{ include "tiny-school-hub.fullname" . }}-secrets
+              key: storage-access-key
+              {{- end }}
+        - name: STORAGE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              {{- if .Values.storage.secretKeyRef }}
+              name: {{ .Values.storage.secretKeyRef.name }}
+              key: {{ .Values.storage.secretKeyRef.key }}
+              {{- else }}
+              name: {{ include "tiny-school-hub.fullname" . }}-secrets
+              key: storage-secret-key
+              {{- end }}
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 12 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 12 }}
+        startupProbe:
+          {{- toYaml .Values.startupProbe | nindent 12 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

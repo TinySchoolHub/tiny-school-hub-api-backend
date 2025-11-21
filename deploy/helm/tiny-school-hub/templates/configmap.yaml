@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tiny-school-hub.fullname" . }}
+  labels:
+    {{- include "tiny-school-hub.labels" . | nindent 4 }}
+data:
+  ENV: {{ .Values.config.env | quote }}
+  PORT: {{ .Values.config.port | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  LOG_FORMAT: {{ .Values.config.logFormat | quote }}
+  RATE_LIMIT: {{ .Values.config.rateLimit | quote }}
+  CORS_ALLOWED_ORIGINS: {{ .Values.config.corsAllowedOrigins | quote }}
+  JWT_ACCESS_EXPIRY: {{ .Values.jwt.accessExpiry | quote }}
+  JWT_REFRESH_EXPIRY: {{ .Values.jwt.refreshExpiry | quote }}
+  {{- if .Values.minio.enabled }}
+  STORAGE_ENDPOINT: {{ .Values.minio.endpoint | quote }}
+  STORAGE_REGION: {{ .Values.minio.region | quote }}
+  STORAGE_BUCKET: {{ .Values.minio.bucket | quote }}
+  STORAGE_USE_PATH_STYLE: {{ .Values.minio.usePathStyle | quote }}
+  STORAGE_INSECURE: {{ .Values.minio.insecure | quote }}
+  {{- else }}
+  STORAGE_ENDPOINT: {{ .Values.storage.endpoint | quote }}
+  STORAGE_REGION: {{ .Values.storage.region | quote }}
+  STORAGE_BUCKET: {{ .Values.storage.bucket | quote }}
+  STORAGE_USE_PATH_STYLE: {{ .Values.storage.usePathStyle | quote }}
+  STORAGE_INSECURE: {{ .Values.storage.insecure | quote }}
+  {{- end }}

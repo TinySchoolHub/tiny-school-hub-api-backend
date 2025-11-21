@@ -1,0 +1,490 @@
+openapi: 3.1.0
+info:
+  title: Tiny School Hub API
+  description: Production-ready, Kubernetes-native API for Tiny School Hub
+  version: 1.0.0
+  contact:
+    name: TinySchoolHub
+    email: contact@tinyschoolhub.com
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+  - url: https://api.tinyschoolhub.com
+    description: Production
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: auth
+    description: Authentication endpoints
+  - name: classes
+    description: Class management
+  - name: photos
+    description: Photo upload and retrieval
+  - name: absences
+    description: Absence reporting
+  - name: messages
+    description: Messaging
+  - name: announcements
+    description: Announcements
+
+paths:
+  /healthz:
+    get:
+      summary: Liveness check
+      tags: [health]
+      security: []
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /readyz:
+    get:
+      summary: Readiness check
+      tags: [health]
+      security: []
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/auth/register:
+    post:
+      summary: Register a new user
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, display_name]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                display_name:
+                  type: string
+                role:
+                  type: string
+                  enum: [TEACHER, PARENT, ADMIN]
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/auth/login:
+    post:
+      summary: Login user
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/auth/refresh:
+    post:
+      summary: Refresh access token
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/auth/logout:
+    post:
+      summary: Logout user
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '204':
+          description: Logout successful
+
+  /v1/classes:
+    post:
+      summary: Create a new class (Teacher/Admin only)
+      tags: [classes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, grade]
+              properties:
+                name:
+                  type: string
+                grade:
+                  type: string
+                school_id:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Class created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    get:
+      summary: List my classes
+      tags: [classes]
+      responses:
+        '200':
+          description: List of classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Class'
+
+  /v1/classes/{id}:
+    get:
+      summary: Get class by ID
+      tags: [classes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Class details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/classes/{id}/members:
+    get:
+      summary: List class members (Teacher only)
+      tags: [classes]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClassMember'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /v1/classes/{id}/photos:
+    post:
+      summary: Upload photo (Teacher only)
+      tags: [photos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content_type, file_size]
+              properties:
+                caption:
+                  type: string
+                content_type:
+                  type: string
+                  enum: [image/jpeg, image/png, image/webp]
+                file_size:
+                  type: integer
+                  maximum: 5242880
+      responses:
+        '201':
+          description: Presigned URL for upload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  photo_id:
+                    type: string
+                    format: uuid
+                  upload_url:
+                    type: string
+                    format: uri
+                  media_key:
+                    type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    get:
+      summary: List class photos
+      tags: [photos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of photos with presigned view URLs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhotoWithURL'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [TEACHER, PARENT, ADMIN]
+        created_at:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    Class:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        grade:
+          type: string
+        school_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ClassMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        class_id:
+          type: string
+          format: uuid
+        role_in_class:
+          type: string
+          enum: [TEACHER, PARENT]
+        created_at:
+          type: string
+          format: date-time
+
+    Photo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        class_id:
+          type: string
+          format: uuid
+        uploader_id:
+          type: string
+          format: uuid
+        caption:
+          type: string
+          nullable: true
+        media_key:
+          type: string
+        content_type:
+          type: string
+        file_size_bytes:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    PhotoWithURL:
+      allOf:
+        - $ref: '#/components/schemas/Photo'
+        - type: object
+          properties:
+            view_url:
+              type: string
+              format: uri
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

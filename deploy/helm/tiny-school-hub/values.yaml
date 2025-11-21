@@ -1,0 +1,209 @@
+# Default values for tiny-school-hub
+replicaCount: 2
+
+image:
+  repository: tinyschoolhub/api
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: api.tinyschoolhub.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# PodDisruptionBudget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Application configuration
+config:
+  env: production
+  port: "8080"
+  logLevel: info
+  logFormat: json
+  rateLimit: 100
+  corsAllowedOrigins: "*"
+
+# Database configuration
+database:
+  # External PostgreSQL
+  url: ""
+  # Or use connection parts
+  host: postgres
+  port: 5432
+  name: tinyschoolhub
+  user: tinyschool
+  sslmode: require
+
+# JWT configuration
+jwt:
+  # Secret should be set via Kubernetes Secret
+  secretKeyRef:
+    name: tiny-school-hub-secrets
+    key: jwt-secret
+  accessExpiry: 15m
+  refreshExpiry: 168h
+
+# Storage configuration (S3-compatible)
+storage:
+  endpoint: ""
+  region: us-east-1
+  bucket: tinyschoolhub
+  usePathStyle: false
+  insecure: false
+  # Credentials should be set via Kubernetes Secret
+  accessKeyRef:
+    name: tiny-school-hub-secrets
+    key: storage-access-key
+  secretKeyRef:
+    name: tiny-school-hub-secrets
+    key: storage-secret-key
+
+# MinIO configuration (if using in-cluster MinIO)
+minio:
+  enabled: false
+  endpoint: minio:9000
+  region: us-east-1
+  bucket: tinyschoolhub
+  usePathStyle: true
+  insecure: true
+
+# Network policies
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            name: ingress-nginx
+      ports:
+      - protocol: TCP
+        port: 8080
+  egress:
+    # Allow DNS
+    - to:
+      - namespaceSelector: {}
+        podSelector:
+          matchLabels:
+            k8s-app: kube-dns
+      ports:
+      - protocol: UDP
+        port: 53
+    # Allow PostgreSQL
+    - to:
+      - podSelector:
+          matchLabels:
+            app: postgres
+      ports:
+      - protocol: TCP
+        port: 5432
+    # Allow MinIO/S3
+    - to:
+      - podSelector:
+          matchLabels:
+            app: minio
+      ports:
+      - protocol: TCP
+        port: 9000
+    # Allow external HTTPS (for external S3)
+    - to:
+      - namespaceSelector: {}
+      ports:
+      - protocol: TCP
+        port: 443
+
+# Probes configuration
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 0
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+
+# Migration job
+migration:
+  enabled: true
+  image:
+    repository: migrate/migrate
+    tag: v4.17.0
+  backoffLimit: 3

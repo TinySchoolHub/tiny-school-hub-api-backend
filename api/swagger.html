@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiny School Hub API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #swagger-ui {
+            max-width: 1460px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            background-color: #1b5e20;
+        }
+
+        .swagger-ui .topbar .download-url-wrapper .select-label {
+            color: #fff;
+        }
+
+        .swagger-ui .topbar .download-url-wrapper input[type=text] {
+            border: 2px solid #2e7d32;
+        }
+
+        .swagger-ui .info .title {
+            color: #1b5e20;
+        }
+
+        /* Custom branding */
+        .topbar-wrapper img {
+            content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><text x="0" y="30" font-size="30">🏫</text></svg>');
+        }
+
+        .topbar-wrapper .link {
+            color: #fff !important;
+            font-weight: bold;
+        }
+
+        .topbar-wrapper .link:after {
+            content: " 🏫 Tiny School Hub API";
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            // Begin Swagger UI call region
+            const ui = SwaggerUIBundle({
+                url: "./openapi.yaml",
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                // Enable "Try it out" by default
+                tryItOutEnabled: true,
+                // Request interceptor to add custom headers (e.g., for CORS)
+                requestInterceptor: (request) => {
+                    // Add any default headers here if needed
+                    return request;
+                },
+                // Response interceptor for debugging
+                responseInterceptor: (response) => {
+                    return response;
+                },
+                // Validate specs
+                validatorUrl: "https://validator.swagger.io/validator",
+                // Display operation ID
+                displayOperationId: false,
+                // Display request duration
+                displayRequestDuration: true,
+                // Filter by tags
+                filter: true,
+                // Show common extensions
+                showExtensions: true,
+                // Show mutated request
+                showMutatedRequest: true,
+                // OAuth2 redirect URL (if needed)
+                oauth2RedirectUrl: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/oauth2-redirect.html'),
+                // Persistence for "Try it out"
+                persistAuthorization: true,
+            });
+            // End Swagger UI call region
+
+            window.ui = ui;
+        };
+    </script>
+</body>
+</html>
