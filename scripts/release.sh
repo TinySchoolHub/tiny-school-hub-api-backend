@@ -140,13 +140,14 @@ if [ -f "scripts/changelog.sh" ]; then
             
             # Create temporary file with new content
             {
-                # Keep everything before [Unreleased]
+                # Keep everything up to and including [Unreleased] section
                 sed -n '1,/## \[Unreleased\]/p' CHANGELOG.md
                 echo
                 # Add new version
                 echo "$CHANGELOG_CONTENT"
-                # Add rest of file (skip Unreleased section)
-                sed -n '/## \[Unreleased\]/,$ { /## \[Unreleased\]/d; p }' CHANGELOG.md
+                echo
+                # Add rest of file after [Unreleased] section
+                sed '1,/## \[Unreleased\]/d' CHANGELOG.md
             } > /tmp/changelog_new.md
             
             mv /tmp/changelog_new.md CHANGELOG.md
