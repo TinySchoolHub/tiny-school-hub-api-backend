@@ -2,7 +2,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![AWS SDK](https://img.shields.io/badge/AWS_SDK-v2-FF9900?style=flat&logo=amazon-aws)](https://aws.github.io/aws-sdk-go-v2/)
-[![License](https://img.shields.io/badge/License-Private-red.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 
 > A production-ready, Kubernetes-native backend for school communication and management.
 
@@ -290,7 +290,7 @@ See [Pre-commit Documentation](.github/PRE_COMMIT_CHECKS.md) for details.
 
 ## 📄 License
 
-Private. All rights reserved.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🙋 Support
 
