@@ -20,6 +20,12 @@ import (
 	"github.com/go-chi/cors"
 )
 
+var (
+	version   = "0.1.0" // Updated by release script
+	buildTime = "unknown"
+	gitCommit = "unknown"
+)
+
 func main() {
 	// Load configuration
 	cfg, err := config.Load()
@@ -30,7 +36,11 @@ func main() {
 
 	// Initialize logger
 	logger := log.New(cfg.Log.Level, cfg.Log.Format)
-	logger.Info("Starting Tiny School Hub API")
+	logger.WithFields(map[string]interface{}{
+		"version":    version,
+		"build_time": buildTime,
+		"git_commit": gitCommit,
+	}).Info("Starting Tiny School Hub API")
 
 	// Initialize database
 	db, err := postgres.NewDB(cfg.Database.URL)
@@ -89,6 +99,7 @@ func main() {
 	// Health endpoints (no auth required)
 	r.Get("/healthz", healthzHandler(logger))
 	r.Get("/readyz", readyzHandler(db, storageClient, logger))
+	r.Get("/version", versionHandler(logger))
 
 	// API v1 routes
 	r.Route("/v1", func(r chi.Router) {
@@ -190,5 +201,15 @@ func readyzHandler(db *postgres.DB, storageClient *storage.Client, logger *log.L
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
+	}
+}
+
+// versionHandler returns version information
+func versionHandler(logger *log.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		response := fmt.Sprintf(`{"version":"%s","build_time":"%s","git_commit":"%s"}`, version, buildTime, gitCommit)
+		w.Write([]byte(response))
 	}
 }
