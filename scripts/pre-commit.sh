@@ -189,15 +189,22 @@ SENSITIVE_PATTERNS=(
 
 for pattern in "${SENSITIVE_PATTERNS[@]}"; do
     # Exclude test files and mock data
-    MATCHES=$(grep -i -E "$pattern" $STAGED_GO_FILES 2>/dev/null | grep -v "_test.go" | grep -v "example" | grep -v "// " || true)
-    if [ -n "$MATCHES" ]; then
-        echo -e "${RED}✗ Possible sensitive data found matching pattern: $pattern${NC}"
-        echo "$MATCHES"
-        echo -e "${YELLOW}Review the above matches carefully${NC}"
-        echo -e "${YELLOW}If this is a false positive (e.g., variable name comparison), it's safe to proceed${NC}"
-        # Changed to warning instead of blocking
-        echo -e "${YELLOW}⚠ Warning: Review carefully before committing${NC}"
-    fi
+    for file in $STAGED_GO_FILES; do
+        # Skip test files
+        if [[ "$file" == *_test.go ]]; then
+            continue
+        fi
+        
+        MATCHES=$(grep -i -E "$pattern" "$file" 2>/dev/null | grep -v "example" | grep -v "// " || true)
+        if [ -n "$MATCHES" ]; then
+            echo -e "${RED}✗ Possible sensitive data found in $file matching pattern: $pattern${NC}"
+            echo "$MATCHES"
+            echo -e "${YELLOW}Review the above matches carefully${NC}"
+            echo -e "${YELLOW}If this is a false positive (e.g., variable name comparison), it's safe to proceed${NC}"
+            # Changed to warning instead of blocking
+            echo -e "${YELLOW}⚠ Warning: Review carefully before committing${NC}"
+        fi
+    done
 done
 print_status 0 "Sensitive data check"
 

@@ -43,66 +43,66 @@ func TestLoad_MissingRequiredFields(t *testing.T) {
 		{
 			name: "missing DATABASE_URL",
 			envVars: map[string]string{
-				"JWT_SECRET":           "secret",
-				"STORAGE_ENDPOINT":     "localhost:9000",
-				"STORAGE_BUCKET":       "bucket",
-				"STORAGE_ACCESS_KEY":   "access",
-				"STORAGE_SECRET_KEY":   "secret",
+				"JWT_SECRET":         "secret",
+				"STORAGE_ENDPOINT":   "localhost:9000",
+				"STORAGE_BUCKET":     "bucket",
+				"STORAGE_ACCESS_KEY": "access",
+				"STORAGE_SECRET_KEY": "secret",
 			},
 			expectedError: "DATABASE_URL is required",
 		},
 		{
 			name: "missing JWT_SECRET",
 			envVars: map[string]string{
-				"DATABASE_URL":         "postgres://localhost:5432/db",
-				"STORAGE_ENDPOINT":     "localhost:9000",
-				"STORAGE_BUCKET":       "bucket",
-				"STORAGE_ACCESS_KEY":   "access",
-				"STORAGE_SECRET_KEY":   "secret",
+				"DATABASE_URL":       "postgres://localhost:5432/db",
+				"STORAGE_ENDPOINT":   "localhost:9000",
+				"STORAGE_BUCKET":     "bucket",
+				"STORAGE_ACCESS_KEY": "access",
+				"STORAGE_SECRET_KEY": "secret",
 			},
 			expectedError: "JWT_SECRET is required",
 		},
 		{
 			name: "missing STORAGE_ENDPOINT",
 			envVars: map[string]string{
-				"DATABASE_URL":         "postgres://localhost:5432/db",
-				"JWT_SECRET":           "secret",
-				"STORAGE_BUCKET":       "bucket",
-				"STORAGE_ACCESS_KEY":   "access",
-				"STORAGE_SECRET_KEY":   "secret",
+				"DATABASE_URL":       "postgres://localhost:5432/db",
+				"JWT_SECRET":         "secret",
+				"STORAGE_BUCKET":     "bucket",
+				"STORAGE_ACCESS_KEY": "access",
+				"STORAGE_SECRET_KEY": "secret",
 			},
 			expectedError: "STORAGE_ENDPOINT is required",
 		},
 		{
 			name: "missing STORAGE_BUCKET",
 			envVars: map[string]string{
-				"DATABASE_URL":         "postgres://localhost:5432/db",
-				"JWT_SECRET":           "secret",
-				"STORAGE_ENDPOINT":     "localhost:9000",
-				"STORAGE_ACCESS_KEY":   "access",
-				"STORAGE_SECRET_KEY":   "secret",
+				"DATABASE_URL":       "postgres://localhost:5432/db",
+				"JWT_SECRET":         "secret",
+				"STORAGE_ENDPOINT":   "localhost:9000",
+				"STORAGE_ACCESS_KEY": "access",
+				"STORAGE_SECRET_KEY": "secret",
 			},
 			expectedError: "STORAGE_BUCKET is required",
 		},
 		{
 			name: "missing STORAGE_ACCESS_KEY",
 			envVars: map[string]string{
-				"DATABASE_URL":         "postgres://localhost:5432/db",
-				"JWT_SECRET":           "secret",
-				"STORAGE_ENDPOINT":     "localhost:9000",
-				"STORAGE_BUCKET":       "bucket",
-				"STORAGE_SECRET_KEY":   "secret",
+				"DATABASE_URL":       "postgres://localhost:5432/db",
+				"JWT_SECRET":         "secret",
+				"STORAGE_ENDPOINT":   "localhost:9000",
+				"STORAGE_BUCKET":     "bucket",
+				"STORAGE_SECRET_KEY": "secret",
 			},
 			expectedError: "STORAGE_ACCESS_KEY is required",
 		},
 		{
 			name: "missing STORAGE_SECRET_KEY",
 			envVars: map[string]string{
-				"DATABASE_URL":         "postgres://localhost:5432/db",
-				"JWT_SECRET":           "secret",
-				"STORAGE_ENDPOINT":     "localhost:9000",
-				"STORAGE_BUCKET":       "bucket",
-				"STORAGE_ACCESS_KEY":   "access",
+				"DATABASE_URL":       "postgres://localhost:5432/db",
+				"JWT_SECRET":         "secret",
+				"STORAGE_ENDPOINT":   "localhost:9000",
+				"STORAGE_BUCKET":     "bucket",
+				"STORAGE_ACCESS_KEY": "access",
 			},
 			expectedError: "STORAGE_SECRET_KEY is required",
 		},
@@ -130,7 +130,7 @@ func TestLoad_MissingRequiredFields(t *testing.T) {
 
 func TestLoad_CustomValues(t *testing.T) {
 	cleanupEnv()
-	
+
 	// Set all environment variables with custom values
 	os.Setenv("PORT", "9090")
 	os.Setenv("ENV", "production")
