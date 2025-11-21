@@ -131,8 +131,9 @@ if [ -f "scripts/changelog.sh" ]; then
         read -p "Would you like to automatically insert this into CHANGELOG.md? (y/N) " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            # Extract just the changelog section (skip the colored output)
-            CHANGELOG_CONTENT=$(./scripts/changelog.sh 2>/dev/null | sed -n '/^## \[VERSION\]/,/^═══/p' | head -n -1)
+            # Extract just the changelog section (skip the colored output and instructions)
+            # Use sed to remove last line instead of head -n -1 (which doesn't work on macOS)
+            CHANGELOG_CONTENT=$(./scripts/changelog.sh 2>/dev/null | sed -n '/^## \[VERSION\]/,/^═══/p' | sed '$d')
             
             # Replace [VERSION] with actual version
             CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed "s/\[VERSION\]/[${NEW_VERSION}]/g")
