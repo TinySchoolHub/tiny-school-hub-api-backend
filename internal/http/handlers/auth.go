@@ -54,8 +54,8 @@ type loginRequest struct {
 }
 
 type authResponse struct {
-	AccessToken  string      `json:"access_token"`
-	RefreshToken string      `json:"refresh_token"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token"`
 	User         *domain.User `json:"user"`
 }
 

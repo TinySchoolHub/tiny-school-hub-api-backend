@@ -159,11 +159,11 @@ func (h *ClassHandler) ListMembers(w http.ResponseWriter, r *http.Request) {
 
 // PhotoHandler handles photo endpoints
 type PhotoHandler struct {
-	photoRepo   repository.PhotoRepository
-	memberRepo  repository.ClassMemberRepository
-	storage     *storage.Client
-	cfg         *config.Config
-	logger      *log.Logger
+	photoRepo  repository.PhotoRepository
+	memberRepo repository.ClassMemberRepository
+	storage    *storage.Client
+	cfg        *config.Config
+	logger     *log.Logger
 }
 
 func NewPhotoHandler(photoRepo repository.PhotoRepository, memberRepo repository.ClassMemberRepository, storage *storage.Client, cfg *config.Config, logger *log.Logger) *PhotoHandler {
@@ -177,9 +177,9 @@ type createPhotoRequest struct {
 }
 
 type photoUploadResponse struct {
-	PhotoID      uuid.UUID `json:"photo_id"`
-	UploadURL    string    `json:"upload_url"`
-	MediaKey     string    `json:"media_key"`
+	PhotoID   uuid.UUID `json:"photo_id"`
+	UploadURL string    `json:"upload_url"`
+	MediaKey  string    `json:"media_key"`
 }
 
 func (h *PhotoHandler) CreateUpload(w http.ResponseWriter, r *http.Request) {

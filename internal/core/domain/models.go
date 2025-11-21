@@ -111,16 +111,16 @@ const (
 
 // Absence represents a student absence record
 type Absence struct {
-	ID           uuid.UUID     `json:"id"`
-	StudentName  string        `json:"student_name"`
-	ClassID      uuid.UUID     `json:"class_id"`
-	AbsenceDate  time.Time     `json:"absence_date"`
-	ReportedBy   ReportedBy    `json:"reported_by"`
-	ReporterID   uuid.UUID     `json:"reporter_id"`
-	Reason       *string       `json:"reason,omitempty"`
-	Status       AbsenceStatus `json:"status"`
-	CreatedAt    time.Time     `json:"created_at"`
-	UpdatedAt    time.Time     `json:"updated_at"`
+	ID          uuid.UUID     `json:"id"`
+	StudentName string        `json:"student_name"`
+	ClassID     uuid.UUID     `json:"class_id"`
+	AbsenceDate time.Time     `json:"absence_date"`
+	ReportedBy  ReportedBy    `json:"reported_by"`
+	ReporterID  uuid.UUID     `json:"reporter_id"`
+	Reason      *string       `json:"reason,omitempty"`
+	Status      AbsenceStatus `json:"status"`
+	CreatedAt   time.Time     `json:"created_at"`
+	UpdatedAt   time.Time     `json:"updated_at"`
 }
 
 // Message represents a message between users

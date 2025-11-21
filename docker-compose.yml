@@ -59,15 +59,15 @@ services:
 
   # Swagger UI - Interactive API documentation
   swagger-ui:
-    image: swaggerapi/swagger-ui:latest
+    image: swaggerapi/swagger-ui:v5.10.5
     container_name: tinyschoolhub-swagger
     environment:
-      SWAGGER_JSON: /api/openapi.yaml
-      BASE_URL: /api-docs
+      SWAGGER_JSON: /openapi.yaml
+      BASE_URL: /
     ports:
       - "8081:8080"
     volumes:
-      - ./api:/api:ro
+      - ./api/openapi.yaml:/openapi.yaml:ro
     networks:
       - tinyschoolhub
     healthcheck:

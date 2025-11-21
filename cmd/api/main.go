@@ -53,8 +53,8 @@ func main() {
 	classRepo := postgres.NewClassRepo(db)
 	memberRepo := postgres.NewClassMemberRepo(db)
 	photoRepo := postgres.NewPhotoRepo(db)
-	_ = postgres.NewAbsenceRepo(db) // TODO: use in handlers
-	_ = postgres.NewMessageRepo(db) // TODO: use in handlers
+	_ = postgres.NewAbsenceRepo(db)      // TODO: use in handlers
+	_ = postgres.NewMessageRepo(db)      // TODO: use in handlers
 	_ = postgres.NewAnnouncementRepo(db) // TODO: use in handlers
 	tokenRepo := postgres.NewRefreshTokenRepo(db)
 

@@ -11,13 +11,13 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	JWT      JWTConfig
-	Storage  StorageConfig
+	Server    ServerConfig
+	Database  DatabaseConfig
+	JWT       JWTConfig
+	Storage   StorageConfig
 	RateLimit int
-	CORS     CORSConfig
-	Log      LogConfig
+	CORS      CORSConfig
+	Log       LogConfig
 }
 
 // ServerConfig holds server-specific configuration
@@ -33,20 +33,20 @@ type DatabaseConfig struct {
 
 // JWTConfig holds JWT token configuration
 type JWTConfig struct {
-	Secret         string
-	AccessExpiry   time.Duration
-	RefreshExpiry  time.Duration
+	Secret        string
+	AccessExpiry  time.Duration
+	RefreshExpiry time.Duration
 }
 
 // StorageConfig holds S3-compatible storage configuration
 type StorageConfig struct {
-	Endpoint       string
-	Region         string
-	Bucket         string
-	AccessKey      string
-	SecretKey      string
-	UsePathStyle   bool
-	Insecure       bool
+	Endpoint     string
+	Region       string
+	Bucket       string
+	AccessKey    string
+	SecretKey    string
+	UsePathStyle bool
+	Insecure     bool
 }
 
 // CORSConfig holds CORS configuration
@@ -74,9 +74,9 @@ func Load() (*Config, error) {
 			URL: getEnv("DATABASE_URL", ""),
 		},
 		JWT: JWTConfig{
-			Secret:         getEnv("JWT_SECRET", ""),
-			AccessExpiry:   parseDuration(getEnv("JWT_ACCESS_EXPIRY", "15m"), 15*time.Minute),
-			RefreshExpiry:  parseDuration(getEnv("JWT_REFRESH_EXPIRY", "168h"), 168*time.Hour),
+			Secret:        getEnv("JWT_SECRET", ""),
+			AccessExpiry:  parseDuration(getEnv("JWT_ACCESS_EXPIRY", "15m"), 15*time.Minute),
+			RefreshExpiry: parseDuration(getEnv("JWT_REFRESH_EXPIRY", "168h"), 168*time.Hour),
 		},
 		Storage: StorageConfig{
 			Endpoint:     getEnv("STORAGE_ENDPOINT", ""),

@@ -53,6 +53,7 @@ This installs a native Git hook that runs automatically on every commit.
 ### 9. YAML Validation
 - Validates YAML syntax in configuration files
 - Prevents invalid Kubernetes/Helm configs
+- **Automatically excludes** Helm template files (contain Go templates)
 
 ### 10. Sensitive Data Detection
 - Scans for potential secrets, passwords, API keys
