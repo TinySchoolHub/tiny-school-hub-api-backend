@@ -4,18 +4,6 @@ on:
     pull_request:
         branches: [main]
         types: [opened, synchronize, reopened]
-        paths:
-            - "**.go"
-            - "go.mod"
-            - "go.sum"
-            - "migrations/**"
-            - "Dockerfile"
-            - "docker-compose.yml"
-            - "VERSION"
-            - "CHANGELOG.md"
-            - ".github/workflows/pr-main.yml"
-            - "docs/**"
-
 permissions:
     contents: read
     pull-requests: write
