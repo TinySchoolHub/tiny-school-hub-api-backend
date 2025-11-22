@@ -181,3 +181,33 @@ Contributors will be recognized in:
 - Project README (for significant contributions)
 
 Thank you for contributing! 🚀
+
+## GitFlow Workflow
+
+This project uses GitFlow. Please read [docs/GITFLOW.md](docs/GITFLOW.md) for detailed instructions.
+
+### Quick Start
+
+1. **Feature development**: Branch from `develop`
+   ```bash
+   git checkout develop
+   git pull origin develop
+   git checkout -b feature/my-feature
+   ```
+
+2. **Create Pull Request**: `feature/my-feature` → `develop`
+
+3. **After approval**: Merge to `develop`, delete feature branch
+
+4. **Release**: Create `release/vX.Y.Z` from `develop`, then merge to `main`
+
+### Commit Message Format
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat: add new feature`
+- `fix: resolve bug`
+- `docs: update documentation`
+- `chore: update dependencies`
+- `refactor: improve code structure`
+- `test: add tests`

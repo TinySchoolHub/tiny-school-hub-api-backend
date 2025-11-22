@@ -1,0 +1,26 @@
+# Code Owners for Tiny School Hub API
+
+# Default owners for everything
+* @fabien
+
+# API and handlers
+/internal/http/ @fabien
+
+# Core business logic
+/internal/core/ @fabien
+
+# Database and migrations
+/internal/repository/ @fabien
+/migrations/ @fabien
+
+# Configuration and deployment
+/deploy/ @fabien
+/docker-compose.yml @fabien
+/Dockerfile @fabien
+
+# Documentation
+/docs/ @fabien
+*.md @fabien
+
+# CI/CD
+/.github/ @fabien
