@@ -23,7 +23,12 @@ type ClassHandler struct {
 	logger     *log.Logger
 }
 
-func NewClassHandler(classRepo repository.ClassRepository, memberRepo repository.ClassMemberRepository, cfg *config.Config, logger *log.Logger) *ClassHandler {
+func NewClassHandler(
+	classRepo repository.ClassRepository,
+	memberRepo repository.ClassMemberRepository,
+	cfg *config.Config,
+	logger *log.Logger,
+) *ClassHandler {
 	return &ClassHandler{classRepo: classRepo, memberRepo: memberRepo, cfg: cfg, logger: logger}
 }
 
@@ -166,7 +171,13 @@ type PhotoHandler struct {
 	logger     *log.Logger
 }
 
-func NewPhotoHandler(photoRepo repository.PhotoRepository, memberRepo repository.ClassMemberRepository, storage *storage.Client, cfg *config.Config, logger *log.Logger) *PhotoHandler {
+func NewPhotoHandler(
+	photoRepo repository.PhotoRepository,
+	memberRepo repository.ClassMemberRepository,
+	storage *storage.Client,
+	cfg *config.Config,
+	logger *log.Logger,
+) *PhotoHandler {
 	return &PhotoHandler{photoRepo: photoRepo, memberRepo: memberRepo, storage: storage, cfg: cfg, logger: logger}
 }
 

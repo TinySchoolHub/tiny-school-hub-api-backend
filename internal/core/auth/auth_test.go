@@ -187,27 +187,29 @@ func TestGenerateAccessToken(t *testing.T) {
 				return
 			}
 
-			if !tt.wantErr {
-				if token == "" {
-					t.Error("GenerateAccessToken() returned empty token")
-				}
+			if tt.wantErr {
+				return
+			}
 
-				// Verify token can be parsed
-				claims, err := ValidateAccessToken(token, secret)
-				if err != nil {
-					t.Errorf("Generated token is invalid: %v", err)
-					return
-				}
+			if token == "" {
+				t.Error("GenerateAccessToken() returned empty token")
+			}
 
-				if claims.UserID != tt.userID {
-					t.Errorf("Token UserID = %v, want %v", claims.UserID, tt.userID)
-				}
-				if claims.Email != tt.email {
-					t.Errorf("Token Email = %v, want %v", claims.Email, tt.email)
-				}
-				if claims.Role != tt.role {
-					t.Errorf("Token Role = %v, want %v", claims.Role, tt.role)
-				}
+			// Verify token can be parsed
+			claims, err := ValidateAccessToken(token, secret)
+			if err != nil {
+				t.Errorf("Generated token is invalid: %v", err)
+				return
+			}
+
+			if claims.UserID != tt.userID {
+				t.Errorf("Token UserID = %v, want %v", claims.UserID, tt.userID)
+			}
+			if claims.Email != tt.email {
+				t.Errorf("Token Email = %v, want %v", claims.Email, tt.email)
+			}
+			if claims.Role != tt.role {
+				t.Errorf("Token Role = %v, want %v", claims.Role, tt.role)
 			}
 		})
 	}

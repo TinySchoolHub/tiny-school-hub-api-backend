@@ -8,6 +8,10 @@ import (
 	"golang.org/x/time/rate"
 )
 
+const (
+	burstMultiplier = 2
+)
+
 // RateLimiter implements per-IP rate limiting
 type RateLimiter struct {
 	visitors map[string]*rate.Limiter
@@ -21,7 +25,7 @@ func NewRateLimiter(requestsPerSecond int) *RateLimiter {
 	rl := &RateLimiter{
 		visitors: make(map[string]*rate.Limiter),
 		rate:     requestsPerSecond,
-		burst:    requestsPerSecond * 2,
+		burst:    requestsPerSecond * burstMultiplier,
 	}
 
 	// Clean up old visitors every 5 minutes

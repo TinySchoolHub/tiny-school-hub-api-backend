@@ -13,11 +13,12 @@ import (
 
 // Argon2 parameters for password hashing
 const (
-	argon2Time    = 1
-	argon2Memory  = 64 * 1024
-	argon2Threads = 4
-	argon2KeyLen  = 32
-	saltLength    = 16
+	argon2Time        = 1
+	argon2Memory      = 64 * 1024
+	argon2Threads     = 4
+	argon2KeyLen      = 32
+	saltLength        = 16
+	refreshTokenBytes = 32
 )
 
 // Claims represents JWT claims
@@ -107,7 +108,7 @@ func GenerateAccessToken(userID, email, role, secret string, expiry time.Duratio
 
 // GenerateRefreshToken generates a random refresh token
 func GenerateRefreshToken() (string, error) {
-	b := make([]byte, 32)
+	b := make([]byte, refreshTokenBytes)
 	if _, err := rand.Read(b); err != nil {
 		return "", fmt.Errorf("failed to generate refresh token: %w", err)
 	}

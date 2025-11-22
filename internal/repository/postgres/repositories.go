@@ -13,6 +13,11 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
+const (
+	maxOpenConnections = 25
+	maxIdleConnections = 5
+)
+
 // DB wraps sql.DB with additional methods
 type DB struct {
 	*sql.DB
@@ -26,8 +31,8 @@ func NewDB(databaseURL string) (*DB, error) {
 	}
 
 	// Set connection pool settings
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(5)
+	db.SetMaxOpenConns(maxOpenConnections)
+	db.SetMaxIdleConns(maxIdleConnections)
 	db.SetConnMaxLifetime(5 * time.Minute)
 
 	// Verify connection

@@ -105,7 +105,7 @@ if echo "$TEST_OUTPUT" | grep -q "\[no test files\]"; then
     echo -e "${YELLOW}⚠ Warning: $NO_TEST_COUNT package(s) have no test files${NC}"
     echo -e "${YELLOW}Consider adding tests for better code quality${NC}"
     print_status 0 "Tests (no test files found)"
-elif [ $TEST_EXIT_CODE -ne 0 ]; then
+    elif [ $TEST_EXIT_CODE -ne 0 ]; then
     print_status 1 "Tests"
     echo -e "${YELLOW}Fix failing tests before committing${NC}"
     exit 1
@@ -148,7 +148,7 @@ if [ -n "$STAGED_SQL_FILES" ]; then
                 echo -e "${RED}✗ Missing corresponding down migration: $down_file${NC}"
                 exit 1
             fi
-        elif [[ $sql_file == *".down.sql" ]]; then
+            elif [[ $sql_file == *".down.sql" ]]; then
             up_file="${sql_file%.down.sql}.up.sql"
             if [ ! -f "$up_file" ]; then
                 echo -e "${RED}✗ Missing corresponding up migration: $up_file${NC}"
