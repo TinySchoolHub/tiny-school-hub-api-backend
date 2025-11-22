@@ -2,7 +2,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![AWS SDK](https://img.shields.io/badge/AWS_SDK-v2-FF9900?style=flat&logo=amazon-aws)](https://aws.github.io/aws-sdk-go-v2/)
-[![License](https://img.shields.io/badge/License-Private-red.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 > A production-ready, Kubernetes-native backend for school communication and management.
 
@@ -397,8 +397,26 @@ For issues or questions, please contact the development team.
 - **API Endpoints:** 13+
 - **Security:** Argon2id + JWT + RBAC
 
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3.0** - see the [LICENSE](LICENSE) file for details.
+
+### What this means:
+
+- ✅ You can use this software for any purpose
+- ✅ You can modify and distribute it
+- ✅ You can use it commercially
+- ⚠️ You must disclose source code when distributing
+- ⚠️ You must use the same license for derivatives
+- ⚠️ You must state changes made to the code
+
+### Contributing
+
+Contributions are welcome! By contributing to this project, you agree that your contributions will be licensed under the GPLv3 license.
+
 ---
 
 **Built with ❤️ for TinySchoolHub**  
-**Last Updated:** November 21, 2025  
-**Status:** Production Ready ✅
+**Last Updated:** November 22, 2025  
+**Status:** Production Ready ✅  
+**License:** GPLv3 - Free and Open Source Software

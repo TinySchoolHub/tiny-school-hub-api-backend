@@ -71,10 +71,13 @@ jobs:
             ghcr.io/${{ steps.version.outputs.repository }}:v${{ steps.version.outputs.major }}
           labels: |
             org.opencontainers.image.title=Tiny School Hub API
-            org.opencontainers.image.description=Backend API for Tiny School Hub
+            org.opencontainers.image.description=Backend API for Tiny School Hub - Open Source School Communication Platform
             org.opencontainers.image.version=v${{ steps.version.outputs.version }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=GPL-3.0
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.documentation=${{ github.server_url }}/${{ github.repository }}/blob/main/README.md
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
