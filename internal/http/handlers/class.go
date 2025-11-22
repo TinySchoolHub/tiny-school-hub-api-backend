@@ -6,13 +6,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/config"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/repository"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/storage"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/pkg/log"
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 )
 
 // ClassHandler handles class endpoints

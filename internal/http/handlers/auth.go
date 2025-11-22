@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/config"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/auth"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/http/middleware"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/repository"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/pkg/log"
-	"github.com/google/uuid"
 )
 
 // AuthHandler handles authentication endpoints

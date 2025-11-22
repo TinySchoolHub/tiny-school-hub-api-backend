@@ -9,15 +9,16 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/config"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/http/handlers"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/http/middleware"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/repository/postgres"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/storage"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/pkg/log"
-	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
 )
 
 var (

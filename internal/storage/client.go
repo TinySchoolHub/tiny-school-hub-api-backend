@@ -6,12 +6,13 @@ import (
 	"strings"
 	"time"
 
-	appconfig "github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/config"
-	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+
+	appconfig "github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/config"
+	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
 )
 
 const (

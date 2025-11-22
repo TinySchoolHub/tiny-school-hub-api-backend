@@ -6,9 +6,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/repository"
-	"github.com/google/uuid"
 )
 
 // PhotoRepo implements repository.PhotoRepository

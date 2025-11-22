@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/config"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/auth"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
-	"github.com/google/uuid"
 )
 
 func TestAuthMiddleware(t *testing.T) {

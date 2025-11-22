@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
+
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/config"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/auth"
-	"github.com/google/uuid"
 )
 
 type contextKey string

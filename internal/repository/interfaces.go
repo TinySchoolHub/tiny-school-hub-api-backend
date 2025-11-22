@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
 	"github.com/google/uuid"
+
+	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
 )
 
 // UserRepository defines the interface for user persistence

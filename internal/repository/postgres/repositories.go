@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
-	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/repository"
 	"github.com/google/uuid"
 	_ "github.com/lib/pq" // PostgreSQL driver
+
+	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
+	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/repository"
 )
 
 const (
