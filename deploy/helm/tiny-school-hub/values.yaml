@@ -205,5 +205,5 @@ migration:
   enabled: true
   image:
     repository: migrate/migrate
-    tag: v4.17.0
+    tag: v4.19.0
   backoffLimit: 3

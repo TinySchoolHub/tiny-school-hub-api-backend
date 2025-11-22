@@ -67,11 +67,10 @@ if ! git diff-index --quiet HEAD --; then
     exit 1
 fi
 
-# Check if on main or release branch
+# Check if on main branch
 CURRENT_BRANCH=$(git branch --show-current)
-if [[ "$CURRENT_BRANCH" != "main" && ! "$CURRENT_BRANCH" =~ ^release/ ]]; then
-    echo -e "${YELLOW}Warning: You are on branch '${CURRENT_BRANCH}'${NC}"
-    echo -e "${YELLOW}Releases should typically be created from 'main' or 'release/*' branches${NC}"
+if [ "$CURRENT_BRANCH" != "main" ]; then
+    echo -e "${YELLOW}Warning: You are on branch '${CURRENT_BRANCH}', not 'main'${NC}"
     read -p "Continue anyway? (y/N) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then

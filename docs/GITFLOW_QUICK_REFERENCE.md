@@ -83,12 +83,12 @@ git push -u origin hotfix/v1.2.1
 
 ## Branch Naming
 
-| Type | Pattern | Example |
-|------|---------|---------|
+| Type    | Pattern               | Example                       |
+| ------- | --------------------- | ----------------------------- |
 | Feature | `feature/description` | `feature/user-authentication` |
-| Bugfix | `bugfix/description` | `bugfix/login-error` |
-| Hotfix | `hotfix/version` | `hotfix/v1.2.1` |
-| Release | `release/version` | `release/v1.3.0` |
+| Bugfix  | `bugfix/description`  | `bugfix/login-error`          |
+| Hotfix  | `hotfix/version`      | `hotfix/v1.2.1`               |
+| Release | `release/version`     | `release/v1.3.0`              |
 
 ## Commit Message Format
 

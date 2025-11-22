@@ -89,7 +89,7 @@ Edit `.github/CODEOWNERS` to add team members:
 
 ```
 # Default owners
-* @fabien @team-member-1 @team-member-2
+* @fabienchevalier @team-member-1 @team-member-2
 
 # Specific paths
 /internal/http/ @backend-team
