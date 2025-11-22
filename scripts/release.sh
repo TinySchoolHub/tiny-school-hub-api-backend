@@ -125,29 +125,29 @@ if [ ! -f ".github/CODEOWNERS" ]; then
 # Code Owners for Tiny School Hub API
 
 # Default owners for everything
-* @fabien
+* @fabienchevalier
 
 # API and handlers
-/internal/http/ @fabien
+/internal/http/ @fabienchevalier
 
 # Core business logic
-/internal/core/ @fabien
+/internal/core/ @fabienchevalier
 
 # Database and migrations
-/internal/repository/ @fabien
-/migrations/ @fabien
+/internal/repository/ @fabienchevalier
+/migrations/ @fabienchevalier
 
 # Configuration and deployment
-/deploy/ @fabien
-/docker-compose.yml @fabien
-/Dockerfile @fabien
+/deploy/ @fabienchevalier
+/docker-compose.yml @fabienchevalier
+/Dockerfile @fabienchevalier
 
 # Documentation
-/docs/ @fabien
-*.md @fabien
+/docs/ @fabienchevalier
+*.md @fabienchevalier
 
 # CI/CD
-/.github/ @fabien
+/.github/ @fabienchevalier
 EOF
     echo -e "${GREEN}✓ Created .github/CODEOWNERS${NC}"
     git add .github/CODEOWNERS

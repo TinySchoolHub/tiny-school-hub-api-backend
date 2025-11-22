@@ -12,7 +12,7 @@
         "dependencies"
     ],
     "assignees": [
-        "@fabien"
+        "@fabienchevalier"
     ],
     "reviewers": [],
     "timezone": "Europe/Paris",
@@ -37,7 +37,7 @@
             "security"
         ],
         "assignees": [
-            "@fabien"
+            "@fabienchevalier"
         ],
         "enabled": true
     },
