@@ -144,16 +144,4 @@
             "deploy/kustomize/overlays/**"
         ]
     },
-    "regexManagers": [
-        {
-            "fileMatch": [
-                "^deploy/kustomize/overlays/.*/kustomization\\.yaml$"
-            ],
-            "matchStrings": [
-                "# renovate: ignore\\n"
-            ],
-            "depNameTemplate": "tinyschoolhub/api",
-            "datasourceTemplate": "docker"
-        }
-    ]
 }
