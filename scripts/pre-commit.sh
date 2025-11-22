@@ -85,8 +85,18 @@ print_status 0 "Build"
 
 # 5. Run tests (quick mode - no integration tests)
 echo -e "\n${YELLOW}5. Running unit tests...${NC}"
+# Temporarily disable exit on error to capture test failures
+set +e
 TEST_OUTPUT=$(go test -short -timeout=30s ./... 2>&1)
 TEST_EXIT_CODE=$?
+set -e
+
+# Always show test output summary
+printf "%s\n" "$TEST_OUTPUT" | grep -E "^(ok|FAIL|\?)" || true
+if [ $TEST_EXIT_CODE -ne 0 ]; then
+    # Show failed test details
+    printf "%s\n" "$TEST_OUTPUT" | grep -E "^(---|    )" || true
+fi
 
 # Check if there are any actual test files
 if echo "$TEST_OUTPUT" | grep -q "\[no test files\]"; then
@@ -96,7 +106,6 @@ if echo "$TEST_OUTPUT" | grep -q "\[no test files\]"; then
     echo -e "${YELLOW}Consider adding tests for better code quality${NC}"
     print_status 0 "Tests (no test files found)"
 elif [ $TEST_EXIT_CODE -ne 0 ]; then
-    echo "$TEST_OUTPUT"
     print_status 1 "Tests"
     echo -e "${YELLOW}Fix failing tests before committing${NC}"
     exit 1

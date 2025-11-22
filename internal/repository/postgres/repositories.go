@@ -10,7 +10,7 @@ import (
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/core/domain"
 	"github.com/TinySchoolHub/tiny-school-hub-api-backend/internal/repository"
 	"github.com/google/uuid"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 // DB wraps sql.DB with additional methods

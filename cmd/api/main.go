@@ -166,11 +166,11 @@ func main() {
 }
 
 // healthzHandler returns a simple liveness check
-func healthzHandler(logger *log.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func healthzHandler(_ *log.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	}
 }
 
@@ -185,7 +185,7 @@ func readyzHandler(db *postgres.DB, storageClient *storage.Client, logger *log.L
 			logger.WithError(err).Error("Database health check failed")
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte(`{"status":"error","message":"database unavailable"}`))
+			_, _ = w.Write([]byte(`{"status":"error","message":"database unavailable"}`))
 			return
 		}
 
@@ -194,22 +194,22 @@ func readyzHandler(db *postgres.DB, storageClient *storage.Client, logger *log.L
 			logger.WithError(err).Error("Storage health check failed")
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusServiceUnavailable)
-			w.Write([]byte(`{"status":"error","message":"storage unavailable"}`))
+			_, _ = w.Write([]byte(`{"status":"error","message":"storage unavailable"}`))
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	}
 }
 
 // versionHandler returns version information
-func versionHandler(logger *log.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func versionHandler(_ *log.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		response := fmt.Sprintf(`{"version":"%s","build_time":"%s","git_commit":"%s"}`, version, buildTime, gitCommit)
-		w.Write([]byte(response))
+		response := fmt.Sprintf(`{"version":%q,"build_time":%q,"git_commit":%q}`, version, buildTime, gitCommit)
+		_, _ = w.Write([]byte(response))
 	}
 }

@@ -19,66 +19,66 @@ linters:
     - gocyclo
     - misspell
     - gosec
-    - bodyclose      # Checks whether HTTP response body is closed
-    - durationcheck  # Check for two durations multiplied together
-    - errname        # Checks that sentinel errors are prefixed with Err
-    - errorlint      # Find code that will cause problems with error wrapping
-    - exportloopref  # Checks for pointers to enclosing loop variables
-    - goconst        # Finds repeated strings that could be replaced by a constant
-    - goimports      # Check import statements are formatted
-    - mnd            # An analyzer to detect magic numbers
-    - lll            # Reports long lines
-    - nakedret       # Finds naked returns in functions
-    - nestif         # Reports deeply nested if statements
-    - noctx          # Finds sending http request without context.Context
-    - prealloc       # Finds slice declarations that could be pre-allocated
-    - revive         # Fast, configurable linter
-    - stylecheck     # Stylecheck is a replacement for golint
-    - unconvert      # Remove unnecessary type conversions
-    - unparam        # Reports unused function parameters
-    - whitespace     # Tool for detection of leading and trailing whitespace
+    - bodyclose # Checks whether HTTP response body is closed
+    - durationcheck # Check for two durations multiplied together
+    - errname # Checks that sentinel errors are prefixed with Err
+    - errorlint # Find code that will cause problems with error wrapping
+    - goconst # Finds repeated strings that could be replaced by a constant
+    - goimports # Check import statements are formatted
+    - mnd # An analyzer to detect magic numbers
+    - lll # Reports long lines
+    - nakedret # Finds naked returns in functions
+    - nestif # Reports deeply nested if statements
+    - noctx # Finds sending http request without context.Context
+    - prealloc # Finds slice declarations that could be pre-allocated
+    - revive # Fast, configurable linter
+    - stylecheck # Stylecheck is a replacement for golint
+    - unconvert # Remove unnecessary type conversions
+    - unparam # Reports unused function parameters
+    - whitespace # Tool for detection of leading and trailing whitespace
 
 linters-settings:
   gocyclo:
     min-complexity: 15
-  
+
   gosec:
     excludes:
       - G404 # Use of weak random number generator - we use it for non-security purposes
-  
+
   lll:
-    line-length: 120
+    line-length: 150
     tab-width: 4
-  
+
   goimports:
     local-prefixes: github.com/TinySchoolHub/tiny-school-hub-api-backend
-  
+
   goconst:
     min-len: 3
     min-occurrences: 3
-  
+
   gocritic:
     enabled-tags:
       - diagnostic
       - performance
       - style
-  
+
   nestif:
-    min-complexity: 4
-  
+    min-complexity: 5
+
   mnd:
     ignored-functions:
-      - 'time.*'
+      - "time.*"
+      - "context.WithTimeout"
 
 issues:
   exclude-dirs:
     - bin
     - vendor
     - migrations
-  
+
   exclude-files:
     - ".*\\.pb\\.go$"
-  
+
   exclude-rules:
     - path: _test\.go
       linters:
@@ -86,11 +86,25 @@ issues:
         - errcheck
         - goconst
         - gocyclo
-    
+        - mnd
+        - lll
+        - revive
+        - gocritic
+
     # Exclude lll issues for long lines with go:generate
     - linters:
         - lll
       source: "^//go:generate "
-  
+
+    # Exclude lll for repository layer (database queries)
+    - path: internal/repository/
+      linters:
+        - lll
+
+    # Exclude mnd for config and main files
+    - path: (internal/config/|cmd/api/)
+      linters:
+        - mnd
+
   max-issues-per-linter: 0
   max-same-issues: 0

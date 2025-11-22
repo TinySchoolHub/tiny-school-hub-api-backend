@@ -93,7 +93,7 @@ func TestAuthMiddleware(t *testing.T) {
 			})
 
 			// Create request
-			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 			if tt.token != "" {
 				req.Header.Set("Authorization", tt.token)
 			}
@@ -204,7 +204,7 @@ func TestRequireRole(t *testing.T) {
 			})
 
 			// Create request with auth token
-			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 			req.Header.Set("Authorization", "Bearer "+token)
 
 			// Create response recorder
@@ -231,11 +231,11 @@ func TestRequireRole_NoAuth(t *testing.T) {
 	// Test RequireRole without authentication
 	roleMW := RequireRole(string(domain.RoleTeacher))
 
-	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 		t.Error("Next handler should not be called")
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	handler := roleMW(next)
@@ -272,7 +272,7 @@ func TestGetUserID(t *testing.T) {
 
 	// Test with invalid UserID format
 	ctx = context.WithValue(context.Background(), UserIDKey, "invalid-uuid")
-	gotID, ok = GetUserID(ctx)
+	_, ok = GetUserID(ctx)
 	if ok {
 		t.Error("GetUserID() with invalid uuid ok = true, want false")
 	}
@@ -306,12 +306,12 @@ func TestGetUserRole(t *testing.T) {
 func TestRequestID(t *testing.T) {
 	// Test with existing request ID
 	existingID := uuid.New().String()
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.Header.Set("X-Request-ID", existingID)
 	rr := httptest.NewRecorder()
 
 	var capturedReq *http.Request
-	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	next := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		capturedReq = r
 	})
 
@@ -334,7 +334,7 @@ func TestRequestID(t *testing.T) {
 	}
 
 	// Test without existing request ID
-	req = httptest.NewRequest(http.MethodGet, "/test", nil)
+	req = httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	rr = httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -360,9 +360,9 @@ func BenchmarkAuthMiddleware(b *testing.B) {
 		},
 	}
 	middleware := AuthMiddleware(cfg)
-	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {})
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	b.ResetTimer()

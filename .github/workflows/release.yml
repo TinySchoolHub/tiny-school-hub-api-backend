@@ -56,8 +56,6 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "major=$(echo ${VERSION} | cut -d. -f1)" >> $GITHUB_OUTPUT
           echo "minor=$(echo ${VERSION} | cut -d. -f1-2)" >> $GITHUB_OUTPUT
-          # Convert repository name to lowercase for Docker tags
-          echo "repository=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -65,10 +63,10 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ steps.version.outputs.repository }}:latest
-            ghcr.io/${{ steps.version.outputs.repository }}:v${{ steps.version.outputs.version }}
-            ghcr.io/${{ steps.version.outputs.repository }}:v${{ steps.version.outputs.minor }}
-            ghcr.io/${{ steps.version.outputs.repository }}:v${{ steps.version.outputs.major }}
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:v${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository }}:v${{ steps.version.outputs.minor }}
+            ghcr.io/${{ github.repository }}:v${{ steps.version.outputs.major }}
           labels: |
             org.opencontainers.image.title=Tiny School Hub API
             org.opencontainers.image.description=Backend API for Tiny School Hub

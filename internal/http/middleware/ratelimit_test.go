@@ -35,7 +35,7 @@ func TestRateLimit_AllowRequests(t *testing.T) {
 	middleware := rl.RateLimit(handler)
 
 	// Should allow first request
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	rr := httptest.NewRecorder()
 
 	middleware.ServeHTTP(rr, req)
@@ -58,7 +58,7 @@ func TestRateLimit_ExceedLimit(t *testing.T) {
 
 	// First two requests should succeed (burst)
 	for i := 0; i < 2; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.RemoteAddr = ip
 		rr := httptest.NewRecorder()
 
@@ -70,7 +70,7 @@ func TestRateLimit_ExceedLimit(t *testing.T) {
 	}
 
 	// Third request should be rate limited
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.RemoteAddr = ip
 	rr := httptest.NewRecorder()
 
@@ -96,7 +96,7 @@ func TestRateLimit_DifferentIPs(t *testing.T) {
 	for _, ip := range ips {
 		// Each IP should be allowed their burst
 		for i := 0; i < 2; i++ {
-			req := httptest.NewRequest(http.MethodGet, "/test", nil)
+			req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 			req.RemoteAddr = ip
 			rr := httptest.NewRecorder()
 
@@ -122,7 +122,7 @@ func TestRateLimit_XRealIP(t *testing.T) {
 
 	// Use X-Real-IP header
 	for i := 0; i < 2; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.RemoteAddr = "192.168.1.1" // Different from X-Real-IP
 		req.Header.Set("X-Real-IP", realIP)
 		rr := httptest.NewRecorder()
@@ -135,7 +135,7 @@ func TestRateLimit_XRealIP(t *testing.T) {
 	}
 
 	// Third request should be rate limited
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.RemoteAddr = "192.168.1.1"
 	req.Header.Set("X-Real-IP", realIP)
 	rr := httptest.NewRecorder()
@@ -160,7 +160,7 @@ func TestRateLimit_XForwardedFor(t *testing.T) {
 
 	// Use X-Forwarded-For header
 	for i := 0; i < 2; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.RemoteAddr = "192.168.1.1"
 		req.Header.Set("X-Forwarded-For", forwardedIP+", 192.168.1.1")
 		rr := httptest.NewRecorder()
@@ -173,7 +173,7 @@ func TestRateLimit_XForwardedFor(t *testing.T) {
 	}
 
 	// Third request should be rate limited
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.RemoteAddr = "192.168.1.1"
 	req.Header.Set("X-Forwarded-For", forwardedIP+", 192.168.1.1")
 	rr := httptest.NewRecorder()
@@ -198,14 +198,14 @@ func TestRateLimit_Recovery(t *testing.T) {
 
 	// Exhaust burst (10 requests)
 	for i := 0; i < 10; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.RemoteAddr = ip
 		rr := httptest.NewRecorder()
 		middleware.ServeHTTP(rr, req)
 	}
 
 	// Should be rate limited
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.RemoteAddr = ip
 	rr := httptest.NewRecorder()
 	middleware.ServeHTTP(rr, req)
@@ -218,7 +218,7 @@ func TestRateLimit_Recovery(t *testing.T) {
 	time.Sleep(250 * time.Millisecond)
 
 	// Should allow request after recovery
-	req = httptest.NewRequest(http.MethodGet, "/test", nil)
+	req = httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.RemoteAddr = ip
 	rr = httptest.NewRecorder()
 	middleware.ServeHTTP(rr, req)
@@ -259,11 +259,11 @@ func TestGetVisitor(t *testing.T) {
 func BenchmarkRateLimit(b *testing.B) {
 	rl := NewRateLimiter(1000)
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {})
 
 	middleware := rl.RateLimit(handler)
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 	req.RemoteAddr = "192.168.1.1"
 
 	b.ResetTimer()
@@ -276,7 +276,7 @@ func BenchmarkRateLimit(b *testing.B) {
 func BenchmarkRateLimit_MultipleIPs(b *testing.B) {
 	rl := NewRateLimiter(1000)
 
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {})
 
 	middleware := rl.RateLimit(handler)
 
@@ -290,7 +290,7 @@ func BenchmarkRateLimit_MultipleIPs(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.RemoteAddr = ips[i%len(ips)]
 		rr := httptest.NewRecorder()
 		middleware.ServeHTTP(rr, req)
