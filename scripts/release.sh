@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# GitFlow Setup Script for Tiny School Hub API
-# This script initializes the GitFlow workflow structure
+# Release script for Tiny School Hub API
+# Usage: ./scripts/release.sh [major|minor|patch|VERSION]
+# Examples:
+#   ./scripts/release.sh patch    # Bump patch version
+#   ./scripts/release.sh minor    # Bump minor version
+#   ./scripts/release.sh major    # Bump major version
+#   ./scripts/release.sh 1.2.3    # Set specific version
 
 set -e
 
@@ -12,327 +17,203 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}════════════════════════════════════════${NC}"
-echo -e "${BLUE}   GitFlow Setup for Tiny School Hub    ${NC}"
-echo -e "${BLUE}════════════════════════════════════════${NC}"
-echo
+# Get current version
+CURRENT_VERSION=$(cat VERSION 2>/dev/null || echo "0.0.0")
+echo -e "${BLUE}Current version: ${CURRENT_VERSION}${NC}"
 
-# Check if we're in a git repository
-if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-    echo -e "${RED}Error: Not in a git repository${NC}"
+# Parse version
+IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+# Determine new version
+if [ "$1" == "major" ]; then
+    MAJOR=$((MAJOR + 1))
+    MINOR=0
+    PATCH=0
+    NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+elif [ "$1" == "minor" ]; then
+    MINOR=$((MINOR + 1))
+    PATCH=0
+    NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+elif [ "$1" == "patch" ]; then
+    PATCH=$((PATCH + 1))
+    NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+elif [ -n "$1" ]; then
+    # Validate version format
+    if [[ ! "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+        echo -e "${RED}Error: Invalid version format. Use X.Y.Z or X.Y.Z-suffix${NC}"
+        exit 1
+    fi
+    NEW_VERSION="$1"
+else
+    echo -e "${RED}Error: Please specify version bump type (major/minor/patch) or exact version${NC}"
+    echo "Usage: $0 [major|minor|patch|X.Y.Z]"
     exit 1
 fi
 
-# Get current branch
-CURRENT_BRANCH=$(git branch --show-current)
-echo -e "${BLUE}Current branch: ${CURRENT_BRANCH}${NC}"
+echo -e "${YELLOW}New version: ${NEW_VERSION}${NC}"
 
-# Check if we're on main
+# Confirm
+read -p "Create release v${NEW_VERSION}? (y/N) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${YELLOW}Release cancelled${NC}"
+    exit 0
+fi
+
+# Check for uncommitted changes
+if ! git diff-index --quiet HEAD --; then
+    echo -e "${RED}Error: You have uncommitted changes${NC}"
+    echo "Please commit or stash them before creating a release"
+    exit 1
+fi
+
+# Check if on main branch
+CURRENT_BRANCH=$(git branch --show-current)
 if [ "$CURRENT_BRANCH" != "main" ]; then
-    echo -e "${YELLOW}Warning: You are not on the main branch${NC}"
-    read -p "Do you want to continue? (y/N) " -n 1 -r
+    echo -e "${YELLOW}Warning: You are on branch '${CURRENT_BRANCH}', not 'main'${NC}"
+    read -p "Continue anyway? (y/N) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 0
     fi
 fi
 
-# Check for uncommitted changes
-if ! git diff-index --quiet HEAD --; then
-    echo -e "${RED}Error: You have uncommitted changes${NC}"
-    echo "Please commit or stash them before running this script"
+# Check if tag already exists
+if git rev-parse "v${NEW_VERSION}" >/dev/null 2>&1; then
+    echo -e "${RED}Error: Tag v${NEW_VERSION} already exists${NC}"
     exit 1
 fi
 
-echo -e "\n${YELLOW}Step 1: Creating develop branch${NC}"
+echo -e "\n${BLUE}Running pre-release checks...${NC}"
 
-# Check if develop branch already exists
-if git show-ref --verify --quiet refs/heads/develop; then
-    echo -e "${YELLOW}develop branch already exists locally${NC}"
-    git checkout develop
-    git pull origin develop 2>/dev/null || echo "No remote develop branch yet"
-else
-    # Check if develop exists on remote
-    if git ls-remote --heads origin develop | grep -q develop; then
-        echo -e "${YELLOW}develop branch exists on remote, checking out${NC}"
-        git checkout -b develop origin/develop
-    else
-        echo -e "${GREEN}Creating new develop branch from main${NC}"
-        git checkout -b develop
+# Run tests
+echo -e "${YELLOW}Running tests...${NC}"
+if ! go test ./...; then
+    echo -e "${RED}Tests failed! Fix them before releasing${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✓ Tests passed${NC}"
+
+# Run pre-commit checks
+if [ -f "scripts/pre-commit.sh" ]; then
+    echo -e "${YELLOW}Running pre-commit checks...${NC}"
+    if ! bash scripts/pre-commit.sh; then
+        echo -e "${RED}Pre-commit checks failed!${NC}"
+        exit 1
     fi
+    echo -e "${GREEN}✓ Pre-commit checks passed${NC}"
 fi
 
-echo -e "${GREEN}✓ develop branch ready${NC}"
+# Update VERSION file
+echo "$NEW_VERSION" > VERSION
+echo -e "${GREEN}✓ Updated VERSION file${NC}"
 
-echo -e "\n${YELLOW}Step 2: Pushing develop to remote${NC}"
-
-if git ls-remote --heads origin develop | grep -q develop; then
-    echo -e "${YELLOW}develop branch already exists on remote${NC}"
-else
-    echo -e "${GREEN}Pushing develop branch to remote${NC}"
-    git push -u origin develop
-    echo -e "${GREEN}✓ develop branch pushed${NC}"
+# Update version in main.go if it exists
+if grep -q "version.*=" cmd/api/main.go 2>/dev/null; then
+    sed -i.bak "s/version = \".*\"/version = \"${NEW_VERSION}\"/" cmd/api/main.go
+    rm -f cmd/api/main.go.bak
+    echo -e "${GREEN}✓ Updated version in main.go${NC}"
 fi
 
-echo -e "\n${YELLOW}Step 3: Branch protection setup${NC}"
-echo -e "${BLUE}Please configure branch protection rules on GitHub:${NC}"
-echo
-echo -e "${YELLOW}For 'main' branch:${NC}"
-echo "  1. Go to: Settings > Branches > Add rule"
-echo "  2. Branch name pattern: main"
-echo "  3. Enable: ✅ Require a pull request before merging"
-echo "  4. Enable: ✅ Require approvals (2)"
-echo "  5. Enable: ✅ Dismiss stale pull request approvals when new commits are pushed"
-echo "  6. Enable: ✅ Require review from Code Owners"
-echo "  7. Enable: ✅ Require status checks to pass before merging"
-echo "  8. Enable: ✅ Require branches to be up to date before merging"
-echo "  9. Enable: ✅ Require conversation resolution before merging"
-echo "  10. Enable: ✅ Require linear history"
-echo "  11. Enable: ✅ Do not allow bypassing the above settings"
-echo "  12. Enable: ✅ Restrict who can push to matching branches"
-echo
-echo -e "${YELLOW}For 'develop' branch:${NC}"
-echo "  1. Go to: Settings > Branches > Add rule"
-echo "  2. Branch name pattern: develop"
-echo "  3. Enable: ✅ Require a pull request before merging"
-echo "  4. Enable: ✅ Require approvals (1)"
-echo "  5. Enable: ✅ Require status checks to pass before merging"
-echo "  6. Enable: ✅ Require conversation resolution before merging"
-echo "  7. Enable: ✅ Allow force pushes (for maintainers only)"
-echo
-read -p "Press Enter after configuring branch protection rules..."
-
-echo -e "\n${YELLOW}Step 4: Renovate setup${NC}"
-echo -e "${BLUE}To enable Renovate:${NC}"
-echo "  1. Visit: https://github.com/apps/renovate"
-echo "  2. Click 'Install' or 'Configure'"
-echo "  3. Select repository: TinySchoolHub/tiny-school-hub-api-backend"
-echo "  4. Grant permissions"
-echo
-echo "  Renovate will:"
-echo "  - Create PRs for dependency updates to 'develop' branch"
-echo "  - Auto-merge patch updates with 'automerge' label"
-echo "  - Group Go dependencies together"
-echo "  - Run weekly on Monday mornings"
-echo
-read -p "Press Enter after setting up Renovate..."
-
-echo -e "\n${YELLOW}Step 5: Creating .github/CODEOWNERS${NC}"
-
-if [ ! -f ".github/CODEOWNERS" ]; then
-    mkdir -p .github
-    cat > .github/CODEOWNERS << 'EOF'
-# Code Owners for Tiny School Hub API
-
-# Default owners for everything
-* @fabienchevalier
-
-# API and handlers
-/internal/http/ @fabienchevalier
-
-# Core business logic
-/internal/core/ @fabienchevalier
-
-# Database and migrations
-/internal/repository/ @fabienchevalier
-/migrations/ @fabienchevalier
-
-# Configuration and deployment
-/deploy/ @fabienchevalier
-/docker-compose.yml @fabienchevalier
-/Dockerfile @fabienchevalier
-
-# Documentation
-/docs/ @fabienchevalier
-*.md @fabienchevalier
-
-# CI/CD
-/.github/ @fabienchevalier
-EOF
-    echo -e "${GREEN}✓ Created .github/CODEOWNERS${NC}"
-    git add .github/CODEOWNERS
-else
-    echo -e "${YELLOW}.github/CODEOWNERS already exists${NC}"
-fi
-
-echo -e "\n${YELLOW}Step 6: Creating .github/pull_request_template.md${NC}"
-
-if [ ! -f ".github/pull_request_template.md" ]; then
-    cat > .github/pull_request_template.md << 'EOF'
-## Description
-
-<!-- Provide a brief description of the changes in this PR -->
-
-## Type of Change
-
-<!-- Mark the relevant option with an "x" -->
-
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📝 Documentation update
-- [ ] 🔧 Configuration change
-- [ ] 🧪 Test update
-- [ ] ♻️ Refactoring (no functional changes)
-
-## Related Issues
-
-<!-- Link to related issues using #issue_number -->
-
-Fixes #
-Related to #
-
-## Changes Made
-
-<!-- List the main changes made in this PR -->
-
--
--
--
-
-## Testing
-
-<!-- Describe how you tested these changes -->
-
-- [ ] Unit tests added/updated
-- [ ] Integration tests added/updated
-- [ ] Manual testing performed
-- [ ] All tests pass locally
-
-### Test Commands
-
-```bash
-# Commands used to test
-go test ./...
-```
-
-## Screenshots (if applicable)
-
-<!-- Add screenshots for UI changes -->
-
-## Checklist
-
-<!-- Mark completed items with an "x" -->
-
-- [ ] Code follows the project's style guidelines
-- [ ] Self-review of code performed
-- [ ] Comments added for complex logic
-- [ ] Documentation updated (if needed)
-- [ ] No new warnings generated
-- [ ] Tests added that prove the fix/feature works
-- [ ] Dependent changes merged and published
-- [ ] CHANGELOG.md updated (for features/fixes)
-
-## Deployment Notes
-
-<!-- Any special considerations for deployment? -->
-
-## Rollback Plan
-
-<!-- How can this change be rolled back if needed? -->
-
----
-
-**For Reviewers:**
-- Code quality and best practices
-- Test coverage
-- Security considerations
-- Performance implications
-EOF
-    echo -e "${GREEN}✓ Created .github/pull_request_template.md${NC}"
-    git add .github/pull_request_template.md
-else
-    echo -e "${YELLOW}.github/pull_request_template.md already exists${NC}"
-fi
-
-echo -e "\n${YELLOW}Step 7: Creating CONTRIBUTING.md updates${NC}"
-
-if [ -f "CONTRIBUTING.md" ]; then
-    if ! grep -q "GitFlow" CONTRIBUTING.md; then
-        cat >> CONTRIBUTING.md << 'EOF'
-
-## GitFlow Workflow
-
-This project uses GitFlow. Please read [docs/GITFLOW.md](docs/GITFLOW.md) for detailed instructions.
-
-### Quick Start
-
-1. **Feature development**: Branch from `develop`
-   ```bash
-   git checkout develop
-   git pull origin develop
-   git checkout -b feature/my-feature
-   ```
-
-2. **Create Pull Request**: `feature/my-feature` → `develop`
-
-3. **After approval**: Merge to `develop`, delete feature branch
-
-4. **Release**: Create `release/vX.Y.Z` from `develop`, then merge to `main`
-
-### Commit Message Format
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-- `feat: add new feature`
-- `fix: resolve bug`
-- `docs: update documentation`
-- `chore: update dependencies`
-- `refactor: improve code structure`
-- `test: add tests`
-EOF
-        echo -e "${GREEN}✓ Updated CONTRIBUTING.md${NC}"
-        git add CONTRIBUTING.md
+# Generate changelog automatically
+echo -e "\n${YELLOW}Generating changelog from git commits...${NC}"
+if [ -f "scripts/changelog.sh" ]; then
+    # Generate changelog and save to temp file
+    ./scripts/changelog.sh > /tmp/changelog_entry.md 2>/dev/null || true
+    
+    # Show generated changelog
+    if [ -f /tmp/changelog_entry.md ] && [ -s /tmp/changelog_entry.md ]; then
+        echo -e "${GREEN}✓ Changelog generated!${NC}"
+        echo
+        cat /tmp/changelog_entry.md
+        echo
+        
+        read -p "Would you like to automatically insert this into CHANGELOG.md? (y/N) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            # Extract just the changelog section (skip the colored output and instructions)
+            # Use sed to remove last line instead of head -n -1 (which doesn't work on macOS)
+            CHANGELOG_CONTENT=$(./scripts/changelog.sh 2>/dev/null | sed -n '/^## \[VERSION\]/,/^═══/p' | sed '$d')
+            
+            # Replace [VERSION] with actual version
+            CHANGELOG_CONTENT=$(echo "$CHANGELOG_CONTENT" | sed "s/\[VERSION\]/[${NEW_VERSION}]/g")
+            
+            # Create temporary file with new content
+            {
+                # Keep everything up to and including [Unreleased] section
+                sed -n '1,/## \[Unreleased\]/p' CHANGELOG.md
+                echo
+                # Add new version
+                echo "$CHANGELOG_CONTENT"
+                echo
+                # Add rest of file after [Unreleased] section
+                sed '1,/## \[Unreleased\]/d' CHANGELOG.md
+            } > /tmp/changelog_new.md
+            
+            mv /tmp/changelog_new.md CHANGELOG.md
+            echo -e "${GREEN}✓ CHANGELOG.md updated automatically${NC}"
+        else
+            echo -e "${YELLOW}Please update CHANGELOG.md manually${NC}"
+            read -p "Press Enter when done..."
+        fi
     else
-        echo -e "${YELLOW}CONTRIBUTING.md already mentions GitFlow${NC}"
+        echo -e "${YELLOW}Could not generate changelog automatically${NC}"
+        echo "Please update CHANGELOG.md manually"
+        read -p "Press Enter when done..."
     fi
+else
+    # Fallback to manual update
+    echo -e "\n${YELLOW}Please update CHANGELOG.md before continuing${NC}"
+    echo "Add release notes for v${NEW_VERSION}"
+    read -p "Press Enter when ready to continue..."
 fi
 
-echo -e "\n${YELLOW}Step 8: Committing GitFlow setup${NC}"
-
-if git diff --cached --quiet; then
-    echo -e "${YELLOW}No changes to commit${NC}"
-else
-    git commit -m "chore: setup GitFlow workflow with Renovate
-
-- Add GitFlow documentation
-- Configure Renovate for dependency management
-- Add PR workflows for develop and main branches
-- Add CODEOWNERS and PR template
-    - Update CONTRIBUTING.md with GitFlow instructions"
-    
-    echo -e "${GREEN}✓ Changes committed${NC}"
-    
-    read -p "Push changes to remote? (y/N) " -n 1 -r
+# Check if CHANGELOG was updated
+if ! grep -q "\[${NEW_VERSION}\]" CHANGELOG.md; then
+    echo -e "${YELLOW}Warning: CHANGELOG.md doesn't contain [${NEW_VERSION}]${NC}"
+    read -p "Continue anyway? (y/N) " -n 1 -r
     echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        git push origin develop
-        echo -e "${GREEN}✓ Changes pushed to develop${NC}"
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        # Revert VERSION file
+        echo "$CURRENT_VERSION" > VERSION
+        exit 0
     fi
 fi
 
+# Commit version bump
+git add VERSION CHANGELOG.md cmd/api/main.go 2>/dev/null || git add VERSION CHANGELOG.md
+git commit -m "chore: bump version to v${NEW_VERSION}"
+echo -e "${GREEN}✓ Committed version bump${NC}"
+
+# Create annotated tag
+echo -e "\n${YELLOW}Creating git tag v${NEW_VERSION}...${NC}"
+
+# Extract changelog for this version
+CHANGELOG_ENTRY=$(sed -n "/## \[${NEW_VERSION}\]/,/## \[/p" CHANGELOG.md | sed '$d')
+
+if [ -z "$CHANGELOG_ENTRY" ]; then
+    CHANGELOG_ENTRY="Release v${NEW_VERSION}"
+fi
+
+git tag -a "v${NEW_VERSION}" -m "${CHANGELOG_ENTRY}"
+echo -e "${GREEN}✓ Created tag v${NEW_VERSION}${NC}"
+
+# Push changes and tag
+echo -e "\n${YELLOW}Pushing to remote...${NC}"
+git push origin "$CURRENT_BRANCH"
+git push origin "v${NEW_VERSION}"
+echo -e "${GREEN}✓ Pushed changes and tag${NC}"
+
+# Success
 echo -e "\n${GREEN}════════════════════════════════════════${NC}"
-echo -e "${GREEN}   ✓ GitFlow Setup Complete!            ${NC}"
+echo -e "${GREEN}✓ Release v${NEW_VERSION} created successfully!${NC}"
 echo -e "${GREEN}════════════════════════════════════════${NC}"
-echo
-echo -e "${BLUE}Next Steps:${NC}"
-echo "  1. Configure branch protection on GitHub"
-echo "  2. Install Renovate app on your repository"
-echo "  3. Review docs/GITFLOW.md for workflow details"
-echo "  4. Start creating feature branches from develop"
-echo "  5. Create your first PR to develop"
-echo
-echo -e "${YELLOW}Helpful Commands:${NC}"
-echo "  • Create feature: git checkout -b feature/my-feature develop"
-echo "  • Create bugfix:  git checkout -b bugfix/fix-bug develop"
-echo "  • Create release: git checkout -b release/v1.2.0 develop"
-echo "  • Create hotfix:  git checkout -b hotfix/v1.2.1 main"
-echo
-echo -e "${BLUE}Documentation:${NC}"
-echo "  • GitFlow Guide:  docs/GITFLOW.md"
-echo "  • Release Guide:  docs/RELEASE_GUIDE.md"
-echo "  • Renovate Config: renovate.json"
-echo
-echo -e "${GREEN}Happy coding! 🚀${NC}"
+echo -e "\nNext steps:"
+echo -e "  1. GitHub Actions will automatically build and publish Docker images"
+echo -e "  2. Create GitHub Release at: https://github.com/TinySchoolHub/tiny-school-hub-api-backend/releases/new?tag=v${NEW_VERSION}"
+echo -e "  3. Deploy to staging/production if needed"
+echo -e "\nDocker image will be available at:"
+echo -e "  ${BLUE}ghcr.io/tinyschoolhub/tiny-school-hub-api:v${NEW_VERSION}${NC}"
+echo -e "  ${BLUE}ghcr.io/tinyschoolhub/tiny-school-hub-api:latest${NC}"
 
 exit 0
