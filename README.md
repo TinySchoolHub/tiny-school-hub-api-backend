@@ -287,6 +287,18 @@ See [Pre-commit Documentation](.github/PRE_COMMIT_CHECKS.md) for details.
 
 This project uses **GitFlow** for branch management and **Renovate** for dependency updates.
 
+### 🎯 **NEW: Complete Workflow Guide**
+
+👉 **[📖 Read the Complete Workflow Guide](docs/WORKFLOW_GUIDE.md)** 👈
+
+**Everything you need to know:**
+- ✅ Daily development workflow
+- ✅ Creating releases step-by-step
+- ✅ Hotfix procedures
+- ✅ What happens automatically (CI/CD)
+- ✅ Command cheat sheet
+- ✅ Troubleshooting guide
+
 ### Quick Start
 
 ```bash
@@ -331,9 +343,12 @@ Review and merge dependency PRs regularly to stay up to date.
 
 ### Documentation
 
-- **[GitFlow Guide](docs/GITFLOW.md)** - Complete workflow documentation
+- **[📖 Workflow Guide](docs/WORKFLOW_GUIDE.md)** - **⭐ START HERE** - Complete step-by-step guide
+- **[GitFlow Guide](docs/GITFLOW.md)** - Detailed workflow documentation
 - **[Quick Reference](docs/GITFLOW_QUICK_REFERENCE.md)** - Command cheat sheet
 - **[Release Guide](docs/RELEASE_GUIDE.md)** - How to create releases
+- **[CI/CD Analysis](docs/CICD_ANALYSIS.md)** - Pipeline optimization details
+- **[Branch Protection](docs/BRANCH_PROTECTION_RULES.md)** - GitHub settings guide
 - **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
 
 ## 📚 Documentation
