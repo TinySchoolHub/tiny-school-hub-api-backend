@@ -4,12 +4,6 @@
 run:
   timeout: 5m
   tests: true
-  skip-dirs:
-    - bin
-    - vendor
-    - migrations
-  skip-files:
-    - ".*\\.pb\\.go$"
 
 linters:
   enable:
@@ -32,7 +26,7 @@ linters:
     - exportloopref  # Checks for pointers to enclosing loop variables
     - goconst        # Finds repeated strings that could be replaced by a constant
     - goimports      # Check import statements are formatted
-    - gomnd          # An analyzer to detect magic numbers
+    - mnd            # An analyzer to detect magic numbers
     - lll            # Reports long lines
     - nakedret       # Finds naked returns in functions
     - nestif         # Reports deeply nested if statements
@@ -72,12 +66,19 @@ linters-settings:
   nestif:
     min-complexity: 4
   
-  gomnd:
-    settings:
-      mnd:
-        ignored-functions: 'time.*'
+  mnd:
+    ignored-functions:
+      - 'time.*'
 
 issues:
+  exclude-dirs:
+    - bin
+    - vendor
+    - migrations
+  
+  exclude-files:
+    - ".*\\.pb\\.go$"
+  
   exclude-rules:
     - path: _test\.go
       linters:
