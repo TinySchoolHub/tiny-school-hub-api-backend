@@ -112,7 +112,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Release v${{ steps.version.outputs.version }}
+          name: API v${{ steps.version.outputs.version }}
           body_path: /tmp/changelog.txt
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, '-') }}
@@ -149,5 +149,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: tiny-school-hub-*.tgz
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
