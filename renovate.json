@@ -1,0 +1,91 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":separateMajorReleases",
+    ":combinePatchMinorReleases",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "labels": ["dependencies"],
+  "assignees": ["@fabien"],
+  "reviewers": [],
+  "timezone": "Europe/Paris",
+  "schedule": ["before 5am on monday"],
+  "prConcurrentLimit": 10,
+  "prCreation": "not-pending",
+  "prHourlyLimit": 0,
+  "rebaseWhen": "behind-base-branch",
+  "automerge": false,
+  "platformAutomerge": false,
+  "semanticCommits": "enabled",
+  "commitMessagePrefix": "chore(deps):",
+  "commitMessageAction": "update",
+  "commitMessageExtra": "to {{newValue}}",
+  "ignoreDeps": [],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": ["@fabien"],
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "Group all Go dependencies together",
+      "matchManagers": ["gomod"],
+      "groupName": "go dependencies",
+      "groupSlug": "go-deps"
+    },
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "groupSlug": "github-actions",
+      "automerge": false
+    },
+    {
+      "description": "Group Docker base image updates",
+      "matchManagers": ["dockerfile"],
+      "groupName": "docker dependencies",
+      "groupSlug": "docker-deps"
+    },
+    {
+      "description": "Auto-merge patch updates for Go dependencies",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "labels": ["dependencies", "automerge"]
+    },
+    {
+      "description": "Security updates get priority",
+      "matchDatasources": ["go"],
+      "matchUpdateTypes": ["patch"],
+      "matchCurrentVersion": "!/^0/",
+      "vulnerabilityAlerts": {
+        "enabled": true
+      },
+      "prPriority": 10
+    },
+    {
+      "description": "Separate major Go version updates",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["dependencies", "major-update"],
+      "groupName": null,
+      "automerge": false
+    }
+  ],
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths"
+  ],
+  "golang": {
+    "commitMessageTopic": "Go module {{depName}}"
+  },
+  "baseBranches": ["develop"],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/vendor/**"
+  ]
+}

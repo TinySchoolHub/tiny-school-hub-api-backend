@@ -1,0 +1,60 @@
+name: GitFlow Question
+description: Ask a question about the GitFlow workflow
+title: "[GitFlow] "
+labels: ["question", "workflow"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your question about our GitFlow workflow!
+        
+        Before submitting, please check:
+        - [GitFlow Guide](../docs/GITFLOW.md)
+        - [Quick Reference](../docs/GITFLOW_QUICK_REFERENCE.md)
+        - [Setup Checklist](../docs/GITFLOW_SETUP_CHECKLIST.md)
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What is your question about?
+      options:
+        - Branch strategy (which branch to use)
+        - Creating pull requests
+        - Release process
+        - Hotfix process
+        - Renovate / Dependencies
+        - CI/CD workflows
+        - Branch protection
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: How do I...?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any additional information that might help us answer your question
+      placeholder: |
+        - Current branch: 
+        - What I tried:
+        - What happened:
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Documentation Checklist
+      description: Have you checked these resources?
+      options:
+        - label: I've read the GitFlow guide
+        - label: I've checked the quick reference
+        - label: I've searched existing issues

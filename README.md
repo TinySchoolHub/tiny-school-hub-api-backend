@@ -283,10 +283,64 @@ git commit --no-verify -m "message"
 
 See [Pre-commit Documentation](.github/PRE_COMMIT_CHECKS.md) for details.
 
+## 🌊 Development Workflow
+
+This project uses **GitFlow** for branch management and **Renovate** for dependency updates.
+
+### Quick Start
+
+```bash
+# Clone and setup
+git clone https://github.com/TinySchoolHub/tiny-school-hub-api-backend.git
+cd tiny-school-hub-api-backend
+
+# Run GitFlow setup (first time only)
+./scripts/setup-gitflow.sh
+
+# Start working on a feature
+git checkout develop
+git pull origin develop
+git checkout -b feature/my-awesome-feature
+
+# Make changes, commit, and push
+git add .
+git commit -m "feat: add awesome feature"
+git push -u origin feature/my-awesome-feature
+
+# Create PR: feature/my-awesome-feature → develop
+```
+
+### Branches
+
+- **`main`** - Production-ready code (protected)
+- **`develop`** - Integration branch for next release (protected)
+- **`feature/*`** - New features (branch from `develop`)
+- **`bugfix/*`** - Bug fixes (branch from `develop`)
+- **`hotfix/*`** - Urgent production fixes (branch from `main`)
+- **`release/*`** - Release preparation (branch from `develop`)
+
+### Automated Dependency Updates
+
+**Renovate** automatically creates PRs for:
+- ✅ Go module updates (grouped together)
+- ✅ GitHub Actions updates
+- ✅ Docker base image updates
+- 🤖 Patch updates auto-merge after CI passes
+
+Review and merge dependency PRs regularly to stay up to date.
+
+### Documentation
+
+- **[GitFlow Guide](docs/GITFLOW.md)** - Complete workflow documentation
+- **[Quick Reference](docs/GITFLOW_QUICK_REFERENCE.md)** - Command cheat sheet
+- **[Release Guide](docs/RELEASE_GUIDE.md)** - How to create releases
+- **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
+
 ## 📚 Documentation
 
 - **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** - Complete feature overview
 - **[AWS_SDK_MIGRATION.md](AWS_SDK_MIGRATION.md)** - AWS SDK v2 migration details
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 
 ## 📄 License
 

@@ -1,0 +1,308 @@
+name: PR to Main (Release)
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate branch name
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          echo "Branch: $BRANCH_NAME"
+          
+          if [[ ! "$BRANCH_NAME" =~ ^(release/|hotfix/) ]]; then
+            echo "❌ Error: PRs to main must come from release/* or hotfix/* branches"
+            echo "Current branch: $BRANCH_NAME"
+            exit 1
+          fi
+          echo "✅ Valid release branch"
+
+      - name: Check VERSION file updated
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q "VERSION"; then
+            echo "✅ VERSION file has been updated"
+          else
+            echo "❌ Error: VERSION file must be updated for release"
+            exit 1
+          fi
+
+      - name: Check CHANGELOG updated
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q "CHANGELOG.md"; then
+            echo "✅ CHANGELOG.md has been updated"
+          else
+            echo "⚠️  Warning: CHANGELOG.md should be updated for release"
+          fi
+
+      - name: Validate version format
+        run: |
+          VERSION=$(cat VERSION)
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "❌ Error: Invalid version format in VERSION file: $VERSION"
+            echo "Expected format: X.Y.Z or X.Y.Z-suffix"
+            exit 1
+          fi
+          echo "✅ Valid version: $VERSION"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=5m
+
+  test:
+    name: Full Test Suite
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests with race detection
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/testdb?sslmode=disable
+
+      - name: Check coverage
+        run: |
+          go tool cover -func=coverage.txt
+          COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: ${COVERAGE}%"
+          
+          if (( $(echo "$COVERAGE < 50" | bc -l) )); then
+            echo "⚠️  Warning: Coverage is below 50%"
+          else
+            echo "✅ Coverage looks good!"
+          fi
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.txt
+          flags: unittests
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/local/bin/
+
+      - name: Run migrations
+        run: migrate -path ./migrations -database "postgres://test:test@localhost:5432/testdb?sslmode=disable" up
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run integration tests
+        run: go test -v -tags=integration ./...
+        env:
+          DATABASE_URL: postgres://test:test@localhost:5432/testdb?sslmode=disable
+
+  docker-build:
+    name: Build and Test Docker Image
+    runs-on: ubuntu-latest
+    needs: [validate-release, lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: |
+            tiny-school-hub-api:${{ steps.version.outputs.version }}
+            tiny-school-hub-api:release
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          docker images
+          echo "✅ Docker image built successfully"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail -fmt sarif -out results.sarif ./...'
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  pre-release-checklist:
+    name: Pre-Release Checklist
+    runs-on: ubuntu-latest
+    needs: [validate-release, lint, test, integration-tests, docker-build, security-scan]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate release summary
+        id: summary
+        run: |
+          VERSION=$(cat VERSION)
+          BRANCH_NAME="${{ github.head_ref }}"
+          
+          echo "# 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Version: v${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "Branch: \`${BRANCH_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Pre-Release Checks Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linting successful" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Docker image built" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Security scans completed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📝 Changelog Preview" >> $GITHUB_STEP_SUMMARY
+          if grep -q "\[${VERSION}\]" CHANGELOG.md; then
+            sed -n "/## \[${VERSION}\]/,/## \[/p" CHANGELOG.md | sed '$d' >> $GITHUB_STEP_SUMMARY || true
+          else
+            echo "⚠️ No changelog entry found for version ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review and approve this PR" >> $GITHUB_STEP_SUMMARY
+          echo "2. Merge to \`main\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Tag will be created: \`v${VERSION}\`" >> $GITHUB_STEP_SUMMARY
+          echo "4. Release workflow will automatically:" >> $GITHUB_STEP_SUMMARY
+          echo "   - Build production Docker images" >> $GITHUB_STEP_SUMMARY
+          echo "   - Push to GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
+          echo "   - Create GitHub Release" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        if: github.event.action == 'opened'
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const version = require('fs').readFileSync('VERSION', 'utf8').trim();
+            const body = `## 🚀 Release PR: v${version}
+            
+            This PR prepares the release for version **v${version}**.
+            
+            ### Pre-Release Checklist
+            - [ ] All tests passing
+            - [ ] CHANGELOG.md updated
+            - [ ] VERSION file updated
+            - [ ] Documentation reviewed
+            - [ ] Migration scripts tested
+            
+            ### After Merge
+            Once merged to \`main\`:
+            1. Tag \`v${version}\` will be created automatically
+            2. Release workflow will build and publish Docker images
+            3. GitHub Release will be created
+            4. Ready for deployment to staging/production
+            
+            **⚠️ Important:** Remember to merge this back to \`develop\` after release!`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

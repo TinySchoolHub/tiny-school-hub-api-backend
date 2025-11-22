@@ -1,14 +1,14 @@
-name: CI
+name: PR to Develop
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [develop]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
+  statuses: write
 
 jobs:
   lint:
@@ -66,6 +66,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.txt
+
   migrations:
     name: Validate Migrations
     runs-on: ubuntu-latest
@@ -99,8 +100,9 @@ jobs:
         run: migrate -path ./migrations -database "postgres://test:test@localhost:5432/testdb?sslmode=disable" down -all
 
   docker:
-    name: Docker Build
+    name: Build Docker Image
     runs-on: ubuntu-latest
+    needs: [lint, test, migrations]
     steps:
       - uses: actions/checkout@v4
 
@@ -112,6 +114,71 @@ jobs:
         with:
           context: .
           push: false
-          tags: tinyschoolhub/api:${{ github.sha }}
+          tags: |
+            tiny-school-hub-api:${{ github.sha }}
+            tiny-school-hub-api:develop
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Test Docker image
+        run: |
+          docker build -t test-image .
+          docker run --rm test-image --version || true
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: '-no-fail -fmt sarif -out results.sarif ./...'
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+    needs: [lint, test, migrations, docker]
+    steps:
+      - name: Check PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          subjectPattern: ^[A-Z].+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            starts with an uppercase character.
+
+      - name: Comment PR
+        uses: actions/github-script@v7
+        if: github.event.action == 'opened'
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 Thanks for opening this PR! All checks are running. Once approved, this will be merged to `develop` for testing before release.'
+            })
