@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-11-22
+
+### Added
+- GPLv3 license file
+- License information and badges in README
+- License header to main.go
+- Open source metadata to Docker images
+
+### Changed
+- Project is now fully open source under GPLv3
+
 ## [0.1.4] - 2025-11-22
 
 ### Changed
