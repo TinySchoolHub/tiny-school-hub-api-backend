@@ -138,7 +138,7 @@
     ],
     "kubernetes": {
         "fileMatch": [
-            "\\.yaml$"
+            "deploy/**/*.yaml"
         ],
         "ignorePaths": [
             "deploy/kustomize/overlays/**"
