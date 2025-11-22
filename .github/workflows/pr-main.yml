@@ -14,6 +14,7 @@ on:
             - "VERSION"
             - "CHANGELOG.md"
             - ".github/workflows/pr-main.yml"
+            - "docs/**"
 
 permissions:
     contents: read
