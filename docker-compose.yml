@@ -112,7 +112,7 @@ services:
 
   # Swagger UI - Interactive API documentation
   swagger-ui:
-    image: swaggerapi/swagger-ui:v5.10.5
+    image: swaggerapi/swagger-ui:v5.30.2
     container_name: tinyschoolhub-swagger
     environment:
       SWAGGER_JSON: /openapi.yaml
