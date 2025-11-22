@@ -12,6 +12,11 @@ on:
             - "Dockerfile"
             - "docker-compose.yml"
             - ".github/workflows/pr-develop.yml"
+            - ".github/workflows/*"
+            - "renovate.json"
+            - ".golangci.yml"
+            - ".dockerignore"
+            - ".env"
 
 permissions:
     contents: read
