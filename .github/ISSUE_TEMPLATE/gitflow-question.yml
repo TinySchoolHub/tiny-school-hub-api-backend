@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for your question about our GitFlow workflow!
-        
+
         Before submitting, please check:
         - [GitFlow Guide](../docs/GITFLOW.md)
         - [Quick Reference](../docs/GITFLOW_QUICK_REFERENCE.md)

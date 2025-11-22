@@ -186,9 +186,9 @@ Related to #
 
 <!-- List the main changes made in this PR -->
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Testing
 
@@ -299,7 +299,7 @@ else
 - Configure Renovate for dependency management
 - Add PR workflows for develop and main branches
 - Add CODEOWNERS and PR template
-- Update CONTRIBUTING.md with GitFlow instructions"
+    - Update CONTRIBUTING.md with GitFlow instructions"
     
     echo -e "${GREEN}✓ Changes committed${NC}"
     

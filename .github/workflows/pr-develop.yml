@@ -1,184 +1,192 @@
 name: PR to Develop
 
 on:
-  pull_request:
-    branches: [develop]
-    types: [opened, synchronize, reopened]
+    pull_request:
+        branches: [develop]
+        types: [opened, synchronize, reopened]
+        paths:
+            - "**.go"
+            - "go.mod"
+            - "go.sum"
+            - "migrations/**"
+            - "Dockerfile"
+            - "docker-compose.yml"
+            - ".github/workflows/pr-develop.yml"
 
 permissions:
-  contents: read
-  pull-requests: write
-  statuses: write
+    contents: read
+    pull-requests: write
+    statuses: write
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.24"
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          args: --timeout=5m
+            - name: golangci-lint
+              uses: golangci/golangci-lint-action@v6
+              with:
+                  version: latest
+                  args: --timeout=5m
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: testdb
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+    test:
+        name: Test
+        runs-on: ubuntu-latest
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: test
+                    POSTGRES_PASSWORD: test
+                    POSTGRES_DB: testdb
+                options: >-
+                    --health-cmd pg_isready
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+                ports:
+                    - 5432:5432
 
-    steps:
-      - uses: actions/checkout@v4
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.24"
+            - name: Set up Go
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24"
 
-      - name: Download dependencies
-        run: go mod download
+            - name: Download dependencies
+              run: go mod download
 
-      - name: Run tests
-        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
-        env:
-          DATABASE_URL: postgres://test:test@localhost:5432/testdb?sslmode=disable
+            - name: Run tests
+              run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+              env:
+                  DATABASE_URL: postgres://test:test@localhost:5432/testdb?sslmode=disable
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage.txt
+            - name: Upload coverage
+              uses: codecov/codecov-action@v4
+              with:
+                  files: ./coverage.txt
 
-  migrations:
-    name: Validate Migrations
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: testdb
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+    migrations:
+        name: Validate Migrations
+        runs-on: ubuntu-latest
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: test
+                    POSTGRES_PASSWORD: test
+                    POSTGRES_DB: testdb
+                options: >-
+                    --health-cmd pg_isready
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+                ports:
+                    - 5432:5432
 
-    steps:
-      - uses: actions/checkout@v4
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Install golang-migrate
-        run: |
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
-          sudo mv migrate /usr/local/bin/
+            - name: Install golang-migrate
+              run: |
+                  curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+                  sudo mv migrate /usr/local/bin/
 
-      - name: Run migrations up
-        run: migrate -path ./migrations -database "postgres://test:test@localhost:5432/testdb?sslmode=disable" up
+            - name: Run migrations up
+              run: migrate -path ./migrations -database "postgres://test:test@localhost:5432/testdb?sslmode=disable" up
 
-      - name: Run migrations down
-        run: migrate -path ./migrations -database "postgres://test:test@localhost:5432/testdb?sslmode=disable" down -all
+            - name: Run migrations down
+              run: migrate -path ./migrations -database "postgres://test:test@localhost:5432/testdb?sslmode=disable" down -all
 
-  docker:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    needs: [lint, test, migrations]
-    steps:
-      - uses: actions/checkout@v4
+    docker:
+        name: Build Docker Image
+        runs-on: ubuntu-latest
+        needs: [lint, test, migrations]
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          tags: |
-            tiny-school-hub-api:${{ github.sha }}
-            tiny-school-hub-api:develop
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            - name: Build Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  push: false
+                  tags: |
+                      tiny-school-hub-api:${{ github.sha }}
+                      tiny-school-hub-api:develop
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
 
-      - name: Test Docker image
-        run: |
-          docker build -t test-image .
-          docker run --rm test-image --version || true
+            - name: Test Docker image
+              run: |
+                  docker build -t test-image .
+                  docker run --rm test-image --version || true
 
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    security:
+        name: Security Scan
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
-        with:
-          args: '-no-fail -fmt sarif -out results.sarif ./...'
+            - name: Run Gosec Security Scanner
+              uses: securego/gosec@master
+              with:
+                  args: "-no-fail -fmt sarif -out results.sarif ./..."
 
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: results.sarif
+            - name: Upload SARIF file
+              uses: github/codeql-action/upload-sarif@v3
+              with:
+                  sarif_file: results.sarif
 
-  pr-validation:
-    name: PR Validation
-    runs-on: ubuntu-latest
-    needs: [lint, test, migrations, docker]
-    steps:
-      - name: Check PR title
-        uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            docs
-            style
-            refactor
-            perf
-            test
-            build
-            ci
-            chore
-            revert
-          requireScope: false
-          subjectPattern: ^[A-Z].+$
-          subjectPatternError: |
-            The subject "{subject}" found in the pull request title "{title}"
-            didn't match the configured pattern. Please ensure that the subject
-            starts with an uppercase character.
+    pr-validation:
+        name: PR Validation
+        runs-on: ubuntu-latest
+        needs: [lint, test, migrations, docker]
+        steps:
+            - name: Check PR title
+              uses: amannn/action-semantic-pull-request@v5
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  types: |
+                      feat
+                      fix
+                      docs
+                      style
+                      refactor
+                      perf
+                      test
+                      build
+                      ci
+                      chore
+                      revert
+                  requireScope: false
+                  subjectPattern: ^[A-Z].+$
+                  subjectPatternError: |
+                      The subject "{subject}" found in the pull request title "{title}"
+                      didn't match the configured pattern. Please ensure that the subject
+                      starts with an uppercase character.
 
-      - name: Comment PR
-        uses: actions/github-script@v7
-        if: github.event.action == 'opened'
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '👋 Thanks for opening this PR! All checks are running. Once approved, this will be merged to `develop` for testing before release.'
-            })
+            - name: Comment PR
+              uses: actions/github-script@v7
+              if: github.event.action == 'opened'
+              with:
+                  github-token: ${{secrets.GITHUB_TOKEN}}
+                  script: |
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: '👋 Thanks for opening this PR! All checks are running. Once approved, this will be merged to `develop` for testing before release.'
+                      })

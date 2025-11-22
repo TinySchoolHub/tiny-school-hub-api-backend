@@ -1,61 +1,62 @@
 name: Auto-merge Renovate PRs
 
 on:
-  pull_request:
-    branches: [develop]
+    pull_request:
+        branches: [develop]
+        types: [opened, synchronize, labeled]
 
 permissions:
-  contents: write
-  pull-requests: write
+    contents: write
+    pull-requests: write
 
 jobs:
-  auto-merge:
-    name: Auto-merge Renovate PRs
-    runs-on: ubuntu-latest
-    if: github.actor == 'renovate[bot]'
-    steps:
-      - name: Check PR labels
-        id: check-labels
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const labels = context.payload.pull_request.labels.map(l => l.name);
-            const isAutomerge = labels.includes('automerge');
-            const isDependencies = labels.includes('dependencies');
-            return isAutomerge && isDependencies;
+    auto-merge:
+        name: Auto-merge Renovate PRs
+        runs-on: ubuntu-latest
+        if: github.actor == 'renovate[bot]'
+        steps:
+            - name: Check PR labels
+              id: check-labels
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const labels = context.payload.pull_request.labels.map(l => l.name);
+                      const isAutomerge = labels.includes('automerge');
+                      const isDependencies = labels.includes('dependencies');
+                      return isAutomerge && isDependencies;
 
-      - name: Wait for CI
-        if: steps.check-labels.outputs.result == 'true'
-        uses: lewagon/wait-on-check-action@v1.3.4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          check-regexp: '(Lint|Test|Validate Migrations|Build Docker Image)'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
+            - name: Wait for CI
+              if: steps.check-labels.outputs.result == 'true'
+              uses: lewagon/wait-on-check-action@v1.3.4
+              with:
+                  ref: ${{ github.event.pull_request.head.sha }}
+                  check-regexp: "(Lint|Test|Validate Migrations|Build Docker Image)"
+                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                  wait-interval: 10
 
-      - name: Approve PR
-        if: steps.check-labels.outputs.result == 'true'
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+            - name: Approve PR
+              if: steps.check-labels.outputs.result == 'true'
+              uses: hmarr/auto-approve-action@v4
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Enable auto-merge
-        if: steps.check-labels.outputs.result == 'true'
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ github.event.pull_request.number }}
-          merge-method: squash
+            - name: Enable auto-merge
+              if: steps.check-labels.outputs.result == 'true'
+              uses: peter-evans/enable-pull-request-automerge@v3
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  pull-request-number: ${{ github.event.pull_request.number }}
+                  merge-method: squash
 
-      - name: Comment on PR
-        if: steps.check-labels.outputs.result == 'true'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '🤖 This Renovate PR has been approved and will auto-merge once all checks pass.'
-            })
+            - name: Comment on PR
+              if: steps.check-labels.outputs.result == 'true'
+              uses: actions/github-script@v7
+              with:
+                  github-token: ${{secrets.GITHUB_TOKEN}}
+                  script: |
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: '🤖 This Renovate PR has been approved and will auto-merge once all checks pass.'
+                      })
